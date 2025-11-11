@@ -1,0 +1,52 @@
+name: CI/CD Pipeline - Next.js → Docker Hub → DigitalOcean VM (Password Auth)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies and build Next.js app
+        run: |
+          npm ci
+          npm run build
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/agrosmart-frontend:latest
+
+      - name: SSH into Droplet and deploy frontend
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          password: ${{ secrets.VM_PASSWORD }}
+          script: |
+            echo "Pulling latest frontend image..."
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/agrosmart-frontend:latest
+            echo "Stopping old frontend container if exists..."
+            docker stop agrosmart-frontend || true
+            docker rm agrosmart-frontend || true
+            echo "Starting new frontend container..."
+            docker run -d --name agrosmart-frontend -p 3000:3000 ${{ secrets.DOCKERHUB_USERNAME }}/agrosmart-frontend:latest
+            echo "✅ Frontend deployed successfully!"

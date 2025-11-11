@@ -7,20 +7,19 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Leaf, Loader2, LogIn } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import ReCAPTCHA from "react-google-recaptcha"
 import { useAuth } from "../app/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/contexts/ToastContext"
 import { validateEmail, validateRequired } from "@/lib/validation"
+import farmerImg from './../public/images/farmer image.png';
 
-export default function Login() {
+export default function NewLogin() {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   })
-  const [captchaToken, setCaptchaToken] = useState("")
 
   const { login } = useAuth()
   const router = useRouter()
@@ -46,18 +45,8 @@ export default function Login() {
       newErrors.password = passwordValidation.error!
     }
 
-    // Validate captcha
-    if (!captchaToken) {
-      showToast('error', 'Captcha Required', 'Please complete the captcha challenge.')
-      return false
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
-
-  const handleCaptchaChange = (token: string | null) => {
-    setCaptchaToken(token || "")
   }
 
   const handleSubmit = async () => {
@@ -65,7 +54,7 @@ export default function Login() {
 
     setLoading(true)
     try {
-      const result = await login(formData.email, formData.password, captchaToken)
+      const result = await login(formData.email, formData.password)
       if (result.success) {
         showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
         router.push("/dashboard")
@@ -135,16 +124,6 @@ export default function Login() {
               </Link>
             </div>
 
-            {/* reCAPTCHA */}
-            {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
-              <div className="flex justify-start">
-                <ReCAPTCHA
-                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-                  onChange={handleCaptchaChange}
-                />
-              </div>
-            )}
-
             {/* Submit Button */}
             <Button
               onClick={handleSubmit}
@@ -169,18 +148,14 @@ export default function Login() {
       </div>
 
       {/* Right Side - Farmer Image */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative">
+        <div className="absolute w-full inset-0 bg-gradient-to-bl from-green-600/20 to-orange-600/20"></div>
         <Image
-          src="/images/farmer image.png"
+          src={farmerImg}
           alt="Benue Farmer"
-          fill
-          className="object-cover"
-          priority
-          style={{ 
-            objectFit: 'cover',
-            objectPosition: 'center 30%'
-          }}
+          className="w-full"
         />
+        <div className="absolute inset-0 bg-black/30"></div>
       </div>
     </div>
   )

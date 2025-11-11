@@ -4,9 +4,14 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "./contexts/AuthContext"
 import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
+import { ToastProvider } from "@/contexts/ToastContext"
+import SessionProvider from "@/components/SessionProvider"
 
-const inter = Inter({ subsets: ["latin"] })
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   title: "BFPC - Benue Farmers Peace Corps",
@@ -31,7 +36,7 @@ export const metadata: Metadata = {
     siteName: "BFPC",
     images: [
       {
-        url: "/images/farmer-hero.jpg",
+        url: "https://res.cloudinary.com/dgswwi2ye/image/upload/v1760965630/shutterstock_2246506733_editorial-use-only_Elen-Marlen_av2wsz.jpg",
         width: 1200,
         height: 630,
         alt: "BFPC - Empowering Farmers",
@@ -44,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "BFPC - Benue Farmers Peace Corps",
     description: "Empowering farmers across Benue State with digital agricultural solutions",
-    images: ["/images/farmer-hero.jpg"],
+    images: ["https://res.cloudinary.com/dgswwi2ye/image/upload/v1760965630/shutterstock_2246506733_editorial-use-only_Elen-Marlen_av2wsz.jpg"],
   },
   robots: {
     index: true,
@@ -82,13 +87,16 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#16a34a" />
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </ThemeProvider>
+      <body className={`${inter.variable} antialiased`}>
+        <SessionProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+            <ToastProvider>
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </SessionProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

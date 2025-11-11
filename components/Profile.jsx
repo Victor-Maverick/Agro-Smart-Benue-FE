@@ -1,6 +1,7 @@
 "use client"
 
 import { useState,React } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -326,7 +327,7 @@ export default function FarmerProfile() {
                   <p className="text-xs sm:text-sm font-medium text-gray-600">Farm Size</p>
                   <p className="text-lg sm:text-2xl font-bold text-gray-900">{farmerData.farmSize} ha</p>
                 </div>
-                <Leaf className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+                <Image src="/images/header image.png" alt="BFPC Logo" width={32} height={32} className="object-contain"/>
               </div>
             </CardContent>
           </Card>

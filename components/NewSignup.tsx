@@ -7,13 +7,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Leaf, Loader2, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import ReCAPTCHA from "react-google-recaptcha"
 import { useAuth } from "../app/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/contexts/ToastContext"
 import { validateEmail, validatePhone, validatePassword, validateName, validateConfirmPassword } from "@/lib/validation"
 
-export default function Signup() {
+export default function NewSignup() {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     firstName: "",
@@ -24,7 +23,6 @@ export default function Signup() {
     confirmPassword: "",
     terms: false,
   })
-  const [captchaToken, setCaptchaToken] = useState("")
 
   const { signup } = useAuth()
   const router = useRouter()
@@ -80,18 +78,8 @@ export default function Signup() {
       return false
     }
 
-    // Validate captcha
-    if (!captchaToken) {
-      showToast('error', 'Captcha Required', 'Please complete the captcha challenge.')
-      return false
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
-
-  const handleCaptchaChange = (token: string | null) => {
-    setCaptchaToken(token || "")
   }
 
   const handleSubmit = async () => {
@@ -99,7 +87,7 @@ export default function Signup() {
 
     setLoading(true)
     try {
-      const result = await signup({ ...formData, captchaToken })
+      const result = await signup(formData)
       if (result.success) {
         showToast('success', 'Account Created!', 'Welcome to BFPC! Your account has been created successfully.')
         router.push("/dashboard")
@@ -116,18 +104,31 @@ export default function Signup() {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Side - Farmer Image */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-600/20 to-orange-600/20"></div>
         <Image
-          src="/images/farmer image.png"
+          src="https://res.cloudinary.com/dgswwi2ye/image/upload/v1760965630/shutterstock_2246506733_editorial-use-only_Elen-Marlen_av2wsz.jpg"
           alt="Benue Farmer"
           fill
           className="object-cover"
           priority
-          style={{ 
-            objectFit: 'cover',
-            objectPosition: 'center top'
-          }}
         />
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="relative z-10 flex flex-col justify-end p-12 text-white">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <Leaf className="h-8 w-8 text-green-400" />
+              <span className="text-2xl font-bold">BFPC</span>
+            </div>
+            <h2 className="text-3xl font-bold leading-tight">
+              Empowering Farmers<br />
+              Across Benue State
+            </h2>
+            <p className="text-lg text-gray-200">
+              Join thousands of farmers already benefiting from our comprehensive agricultural platform.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Right Side - Signup Form */}
@@ -226,16 +227,6 @@ export default function Signup() {
                 </Link>
               </label>
             </div>
-
-            {/* reCAPTCHA */}
-            {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
-              <div className="flex justify-start">
-                <ReCAPTCHA
-                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-                  onChange={handleCaptchaChange}
-                />
-              </div>
-            )}
 
             {/* Submit Button */}
             <Button

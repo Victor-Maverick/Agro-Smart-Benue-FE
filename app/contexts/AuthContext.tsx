@@ -3,6 +3,8 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
+import axios from "axios"
 
 interface User {
   id: string
@@ -22,8 +24,8 @@ interface User {
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (credentials: any) => Promise<boolean>
-  signup: (userData: any) => Promise<boolean>
+  login: (email: string, password: string, captchaToken?: string) => Promise<{ success: boolean; error?: string }>
+  signup: (userData: any) => Promise<{ success: boolean; error?: string }>
   logout: () => void
   googleLogin: () => Promise<boolean>
 }
@@ -49,63 +51,105 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false)
   }, [])
 
-  const login = async (credentials: any): Promise<boolean> => {
+  const login = async (email: string, password: string, captchaToken?: string): Promise<{ success: boolean; error?: string }> => {
     setLoading(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
-      const mockUser: User = {
-        id: "1",
-        name: credentials.name || "John Farmer",
-        email: credentials.email,
-        phone: credentials.phone,
-        farmDetails: {
-          farmSize: "5.2",
-          location: "Makurdi, Benue State",
-          crops: ["Rice", "Yam", "Cassava"],
-          experience: "8 years",
-          soilType: "Loamy",
-        },
+      // Call backend login endpoint
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
+        email,
+        password,
+        captchaToken
+      })
+
+      console.log('Login response:', response.data) // Debug log
+
+      if (response.data && response.data.status) {
+        const userData = response.data.data
+        
+        const user: User = {
+          id: userData.email,
+          name: `${userData.firstName} ${userData.lastName}`,
+          email: userData.email,
+          phone: userData.phone,
+          avatar: userData.mediaUrl,
+          farmDetails: {
+            farmSize: "0",
+            location: "",
+            crops: [],
+            experience: "0 years",
+            soilType: "Unknown",
+          },
+        }
+
+        setUser(user)
+        localStorage.setItem("bfpc_user", JSON.stringify(user))
+
+        // Sign in with NextAuth
+        await signIn("credentials", {
+          email,
+          token: userData.token,
+          redirect: false
+        })
+
+        setLoading(false)
+        return { success: true }
       }
-
-      setUser(mockUser)
-      localStorage.setItem("bfpc_user", JSON.stringify(mockUser))
+      
       setLoading(false)
-      return true
-    } catch (error) {
+      return { success: false, error: response.data?.message || 'Login failed' }
+    } catch (error: any) {
+      console.error("Login error:", error)
       setLoading(false)
-      return false
+      
+      // Extract error message from backend response
+      // For login errors, backend returns ErrorResponse with message field
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          'An error occurred during login'
+      
+      return { success: false, error: errorMessage }
     }
   }
 
-  const signup = async (userData: any): Promise<boolean> => {
+  const signup = async (userData: any): Promise<{ success: boolean; error?: string }> => {
     setLoading(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
-      const newUser: User = {
-        id: Date.now().toString(),
-        name: userData.name,
+      // Call backend signup endpoint
+      const response = await axios.post(`${API_URL}/api/users/register`, {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
         email: userData.email,
         phone: userData.phone,
-        farmDetails: {
-          farmSize: userData.farmSize || "0",
-          location: userData.location || "",
-          crops: userData.crops || [],
-          experience: userData.experience || "0 years",
-          soilType: userData.soilType || "Unknown",
-        },
-      }
+        password: userData.password,
+        captchaToken: userData.captchaToken
+      })
 
-      setUser(newUser)
-      localStorage.setItem("bfpc_user", JSON.stringify(newUser))
+      console.log('Signup response:', response.data) // Debug log
+
+      if (response.data && response.data.message) {
+        // Registration successful - user will need to verify email
+        setLoading(false)
+        return { success: true }
+      }
+      
       setLoading(false)
-      return true
-    } catch (error) {
+      return { success: false, error: 'Registration failed' }
+    } catch (error: any) {
+      console.error("Signup error:", error)
       setLoading(false)
-      return false
+      
+      // Extract error message from backend response
+      // For signup errors, backend returns string message directly
+      const errorMessage = typeof error.response?.data === 'string' 
+                          ? error.response.data 
+                          : error.response?.data?.message || 
+                            'An error occurred during registration'
+      
+      return { success: false, error: errorMessage }
     }
   }
 
@@ -138,9 +182,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null)
     localStorage.removeItem("bfpc_user")
+    
+    // Sign out from NextAuth
+    const { signOut } = await import("next-auth/react")
+    await signOut({ redirect: false })
+    
     router.push("/")
   }
 

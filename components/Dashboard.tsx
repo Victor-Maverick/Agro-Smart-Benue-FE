@@ -42,6 +42,7 @@ import {
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/app/contexts/AuthContext";
 import Link from "next/link";
+import Image from "next/image";
 export default function Dashboard() {
     const { user, logout } = useAuth()
     const router = useRouter()
@@ -230,7 +231,7 @@ export default function Dashboard() {
                     <div className="flex justify-between items-center h-16">
                         {/* Desktop View */}
                         <div className="hidden md:flex items-center space-x-4">
-                            <Leaf className="h-8 w-8 text-green-600" />
+                            <Image src="/images/header image.png" alt="BFPC Logo" width={32} height={32} className="object-contain"/>
                             <div>
                                 <h1 className="text-xl font-bold text-gray-900">BFPC Dashboard</h1>
                                 <p className="text-sm text-gray-500">Welcome back, {user?.name}</p>
@@ -534,28 +535,58 @@ export default function Dashboard() {
 
                     {/* Market Tab */}
                     <TabsContent value="market" className="space-y-6">
-                        <h2 className="text-2xl font-bold">Market prices</h2>
-                        <div className="space-y-4">
-                            {marketPrices.map((item, index) => (
-                                <Card key={index} className="p-4 flex items-center justify-between">
-                                    <div className="flex items-center space-x-4">
-                                        <img src={item.image} alt={item.crop} className="h-12 w-12 rounded-lg object-cover" />
-                                        <div>
-                                            <p className="font-medium text-gray-900">{item.crop}</p>
-                                            <p className="text-sm text-gray-500">{item.location}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        {item.trend === 'up' ? (
-                                            <TrendingUp className="h-5 w-5 text-green-600" />
-                                        ) : (
-                                            <TrendingDown className="h-5 w-5 text-red-600" />
-                                        )}
-                                        <span className={`text-lg font-bold ${item.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>{item.price}</span>
-                                    </div>
-                                </Card>
-                            ))}
-                        </div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-2xl font-bold">Market Prices</CardTitle>
+                                <CardDescription>Latest commodity prices from major markets in Benue State</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="text-left py-3 px-2 font-semibold text-gray-700">Crop</th>
+                                                <th className="text-left py-3 px-2 font-semibold text-gray-700">Market Location</th>
+                                                <th className="text-right py-3 px-2 font-semibold text-gray-700">Price</th>
+                                                <th className="text-center py-3 px-2 font-semibold text-gray-700">Trend</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {marketPrices.map((item, index) => (
+                                                <tr key={index} className="border-b hover:bg-gray-50 transition-colors">
+                                                    <td className="py-4 px-2">
+                                                        <div className="flex items-center space-x-3">
+                                                            <img src={item.image} alt={item.crop} className="h-10 w-10 rounded-lg object-cover" />
+                                                            <span className="font-medium text-gray-900">{item.crop}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 px-2 text-gray-600">{item.location}</td>
+                                                    <td className="py-4 px-2 text-right font-bold text-lg">{item.price}</td>
+                                                    <td className="py-4 px-2 text-center">
+                                                        <div className="flex items-center justify-center">
+                                                            {item.trend === 'up' ? (
+                                                                <div className="flex items-center space-x-1 text-green-600">
+                                                                    <TrendingUp className="h-4 w-4" />
+                                                                    <span className="text-sm font-medium">Up</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center space-x-1 text-red-600">
+                                                                    <TrendingDown className="h-4 w-4" />
+                                                                    <span className="text-sm font-medium">Down</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="mt-4 text-sm text-gray-500 text-center">
+                                    Last updated: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
+                                </div>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
 
                     {/* Community Tab */}

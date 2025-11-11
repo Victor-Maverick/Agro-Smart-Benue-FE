@@ -24,7 +24,7 @@ import {
 import {
   Users,
   TrendingUp,
-  DollarSign,
+  Banknote,
   BookOpen,
   AlertTriangle,
   CheckCircle,
@@ -49,6 +49,8 @@ import {
   MessageSquare,
   Camera,
 } from "lucide-react"
+import AdminCropManager from "./AdminCropManager"
+import AdminUserManager from "./AdminUserManager"
 import {
   LineChart,
   Line,
@@ -540,7 +542,7 @@ export default function AdminDashboard() {
                   <p className="text-lg sm:text-2xl font-bold text-green-600">{dashboardStats.totalRevenue}</p>
                   <p className="text-xs text-green-600">+18% from last month</p>
                 </div>
-                <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+                <Banknote className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -562,7 +564,7 @@ export default function AdminDashboard() {
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           <div className="overflow-x-auto">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 min-w-[600px] lg:min-w-0 bg-green-50 border border-green-200">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-8 min-w-[800px] lg:min-w-0 bg-green-50 border border-green-200">
               <TabsTrigger
                 value="overview"
                 className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm"
@@ -574,6 +576,12 @@ export default function AdminDashboard() {
                 className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm"
               >
                 Farmers
+              </TabsTrigger>
+              <TabsTrigger
+                value="users"
+                className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm"
+              >
+                Users
               </TabsTrigger>
               <TabsTrigger
                 value="analytics"
@@ -592,6 +600,12 @@ export default function AdminDashboard() {
                 className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm"
               >
                 System
+              </TabsTrigger>
+              <TabsTrigger
+                value="crops"
+                className="data-[state=active]:bg-green-600 data-[state=active]:text-white text-xs sm:text-sm"
+              >
+                Crops
               </TabsTrigger>
               <TabsTrigger
                 value="settings"
@@ -631,7 +645,7 @@ export default function AdminDashboard() {
               <Card className="border-green-200">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
+                    <Banknote className="h-5 w-5 text-green-600" />
                     Revenue Growth
                   </CardTitle>
                 </CardHeader>
@@ -763,7 +777,7 @@ export default function AdminDashboard() {
                         <DropdownMenuItem onClick={() => setFarmerFilter("suspended")}>Suspended</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <Button className="bg-green-600 hover:bg-green-700" onClick={() => setShowAddFarmerModal(true)}>
+                    <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowAddFarmerModal(true)}>
                       <Plus className="h-4 w-4 mr-2" />
                       Add Farmer
                     </Button>
@@ -868,6 +882,10 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-4 sm:space-y-6">
+            <AdminUserManager />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4 sm:space-y-6">
@@ -1063,7 +1081,7 @@ export default function AdminDashboard() {
                           <Eye className="h-4 w-4 mr-1" />
                           Review
                         </Button>
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Approve
                         </Button>
@@ -1191,6 +1209,10 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="crops" className="space-y-4 sm:space-y-6">
+            <AdminCropManager />
+          </TabsContent>
+
           <TabsContent value="settings" className="space-y-4 sm:space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Card className="border-green-200">
@@ -1263,7 +1285,7 @@ export default function AdminDashboard() {
                       onChange={(e) => setAdminProfile((prev) => ({ ...prev, email: e.target.value }))}
                     />
                   </div>
-                  <Button className="w-full bg-green-600 hover:bg-green-700">Update Profile</Button>
+                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">Update Profile</Button>
                 </CardContent>
               </Card>
             </div>
@@ -1346,7 +1368,7 @@ export default function AdminDashboard() {
               <Button variant="outline" onClick={() => setShowAddAdminModal(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleAddAdmin} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleAddAdmin} className="bg-green-600 hover:bg-green-700 text-white">
                 Add Admin
               </Button>
             </DialogFooter>
@@ -1465,7 +1487,7 @@ export default function AdminDashboard() {
               <Button variant="outline" onClick={() => setShowAddFarmerModal(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleAddFarmer} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleAddFarmer} className="bg-green-600 hover:bg-green-700 text-white">
                 Add Farmer
               </Button>
             </DialogFooter>
@@ -1657,7 +1679,7 @@ export default function AdminDashboard() {
               <Button variant="outline" onClick={() => setShowEditFarmerModal(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleUpdateFarmer} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleUpdateFarmer} className="bg-green-600 hover:bg-green-700 text-white">
                 Update Farmer
               </Button>
             </DialogFooter>
@@ -1696,7 +1718,7 @@ export default function AdminDashboard() {
               <Button variant="outline" onClick={() => setShowMessageModal(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSendMessageSubmit} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleSendMessageSubmit} className="bg-green-600 hover:bg-green-700 text-white">
                 Send Message
               </Button>
             </DialogFooter>

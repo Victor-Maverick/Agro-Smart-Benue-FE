@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Leaf, Menu, X } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { useAuth } from "../app/contexts/AuthContext"
 
 export default function Navigation() {
@@ -13,10 +14,10 @@ export default function Navigation() {
   return (
     <nav className="bg-white shadow-sm border-b border-green-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-[80px]">
           <Link href="/" className="flex items-center space-x-2">
-            <Leaf className="h-8 w-8 text-green-600" />
-            <span className="text-xl font-bold text-green-900">BFPC</span>
+            <Image src="/images/header image.png" alt="BFPC Logo" width={64} height={64} className="object-contain"/>
+            <p className="font-bold leading-tight text-green-800">Benue <span className="text-orange-600">Farmers</span> <br />Peace Corps</p>
           </Link>
 
           {/* Desktop Navigation */}
@@ -39,7 +40,7 @@ export default function Navigation() {
 
             {user ? (
               <Link href="/dashboard">
-                <Button className="bg-green-600 hover:bg-green-700">Dashboard</Button>
+                <Button className="bg-green-600 hover:bg-green-700 text-white">Dashboard</Button>
               </Link>
             ) : (
               <div className="flex items-center space-x-4">
@@ -52,7 +53,7 @@ export default function Navigation() {
                   </Button>
                 </Link>
                 <Link href="/signup">
-                  <Button className="bg-green-600 hover:bg-green-700">Join BFPC</Button>
+                  <Button className="bg-green-600 hover:bg-green-700 text-white">Join BFPC</Button>
                 </Link>
               </div>
             )}
@@ -88,7 +89,7 @@ export default function Navigation() {
 
               {user ? (
                 <Link href="/dashboard">
-                  <Button className="w-full bg-green-600 hover:bg-green-700">Dashboard</Button>
+                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">Dashboard</Button>
                 </Link>
               ) : (
                 <div className="flex flex-col space-y-2 pt-4">
@@ -101,7 +102,7 @@ export default function Navigation() {
                     </Button>
                   </Link>
                   <Link href="/signup">
-                    <Button className="w-full bg-green-600 hover:bg-green-700">Join BFPC</Button>
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white">Join BFPC</Button>
                   </Link>
                 </div>
               )}

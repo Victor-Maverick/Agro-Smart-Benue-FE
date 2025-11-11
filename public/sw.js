@@ -1,4 +1,4 @@
-const CACHE_NAME = "bfpc-v1.0.0"
+const CACHE_NAME = "bfpc-v2.0.0"
 const urlsToCache = [
   "/",
   "/login",
@@ -6,12 +6,11 @@ const urlsToCache = [
   "/dashboard",
   "/offline",
   "/manifest.json",
-  "/images/farmer-hero.jpg",
-  "/images/woman-farmer-corn.jpg",
-  "/images/banana-harvest.jpg",
   "/images/yam-market.jpg",
   "/images/cassava-farmer.jpg",
   "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+  "https://res.cloudinary.com/dgswwi2ye/image/upload/v1760965630/shutterstock_2246506733_editorial-use-only_Elen-Marlen_av2wsz.jpg",
+  "https://res.cloudinary.com/dgswwi2ye/image/upload/v1760965630/delicious-dried-fruits-prunes-apricot-selling-rich-harvest-farm-produce-market-rich-harvesting-healthy-eating-fitness-sup-197752703_dsxdr1.jpg",
 ]
 
 // Install event - cache resources

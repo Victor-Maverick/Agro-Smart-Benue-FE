@@ -2,6 +2,7 @@
 const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    optimizeCss: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
