@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { 
-  Menu, 
-  X, 
+  ChevronLeft,
+  ChevronRight,
   LayoutDashboard, 
   Calendar, 
   DollarSign, 
@@ -56,35 +56,33 @@ export default function CollapsibleSidebar({
       >
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-          {!isCollapsed && (
-            <div className="flex items-center space-x-2">
-              <Image 
-                src="/images/header image.png" 
-                alt="BFPC Logo" 
-                width={32} 
-                height={32} 
-                className="object-contain"
-              />
-              <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-            </div>
+          {!isCollapsed ? (
+            <>
+              <div className="flex items-center space-x-2">
+                <Image 
+                  src="/images/header image.png" 
+                  alt="BFPC Logo" 
+                  width={32} 
+                  height={32} 
+                  className="object-contain"
+                />
+                <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+              </div>
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="w-full flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
           )}
-          {isCollapsed && (
-            <Image 
-              src="/images/header image.png" 
-              alt="BFPC Logo" 
-              width={24} 
-              height={24} 
-              className="object-contain mx-auto"
-            />
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className={cn("ml-auto", isCollapsed && "mx-auto mt-2")}
-          >
-            {isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
-          </Button>
         </div>
 
         {/* Navigation Items */}

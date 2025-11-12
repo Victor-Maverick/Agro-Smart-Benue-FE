@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Package, TrendingUp } from "lucide-react"
+import ProductTable from "@/components/ProductTable"
 
 interface Product {
   id: number
@@ -102,47 +103,20 @@ export default function AdminProductsDemandsManager() {
         </TabsList>
 
         <TabsContent value="products" className="space-y-4">
-          <div className="grid gap-4">
-            {products.map((product) => (
-              <Card key={product.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {product.name}
-                        <Badge variant={product.inStock ? "default" : "secondary"}>
-                          {product.inStock ? "In Stock" : "Out of Stock"}
-                        </Badge>
-                      </CardTitle>
-                      <CardDescription>{product.description}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="font-medium text-gray-700">Category</p>
-                      <p className="text-gray-600 capitalize">{product.category}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-700">Price per Unit</p>
-                      <p className="text-gray-600">
-                        {product.pricePerUnit ? formatPrice(product.pricePerUnit) : "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-700">Quantity</p>
-                      <p className="text-gray-600">{product.quantity} {product.unit}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-700">Location</p>
-                      <p className="text-gray-600">{product.location}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {products.length > 0 ? (
+            <ProductTable 
+              products={products} 
+              itemsPerPage={15}
+            />
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Products Found</h3>
+                <p className="text-gray-600">No products have been added to the marketplace yet.</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="demands" className="space-y-4">

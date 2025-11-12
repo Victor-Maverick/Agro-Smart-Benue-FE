@@ -9,55 +9,78 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, ShoppingBag, TrendingUp, Plus, Edit, Trash2 } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Loader2, ShoppingBag, TrendingUp, Plus } from "lucide-react"
 import { useAuth } from "@/app/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
+import ProductTable from "@/components/ProductTable"
 
 interface Product {
   id: number
   name: string
   description: string
-  category: string
   quantity: number
-  unit: string
-  pricePerUnit: number
-  location: string
+  quantityCategory: string
+  unitPrice: number
+  location?: string
   imageUrl?: string
-  available: boolean
+  isAvailable?: boolean
+  available?: boolean
+  farmerName?: string
+  // Legacy fields for backward compatibility
+  unit?: string
+  pricePerUnit?: number
+}
+
+interface Demand {
+  id: number
+  productName: string
+  description?: string
+  offerPrice?: number
+  quantity: number
+  quantityCategory: string
+  location?: string
+  phoneContact: string
+  status?: string
+  createdAt?: string
 }
 
 export default function UserProductManager() {
   const { user } = useAuth()
   const { showToast } = useToast()
   const [products, setProducts] = useState<Product[]>([])
+  const [demands, setDemands] = useState<Demand[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [isAddProductOpen, setIsAddProductOpen] = useState(false)
   const [isAddDemandOpen, setIsAddDemandOpen] = useState(false)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>("")
+  const [activeTab, setActiveTab] = useState("products")
 
   const [productForm, setProductForm] = useState({
     name: "",
     description: "",
-    category: "",
     quantity: "",
-    unit: "",
-    pricePerUnit: "",
+    quantityCategory: "",
+    unitPrice: "",
     location: "",
   })
 
   const [demandForm, setDemandForm] = useState({
     productName: "",
     quantity: "",
-    unit: "",
+    quantityCategory: "",
+    offerPrice: "",
     location: "",
+    phoneContact: "",
     description: "",
   })
 
   useEffect(() => {
     if (user?.email) {
       fetchUserProducts()
+      fetchUserDemands()
     }
   }, [user])
 
@@ -77,6 +100,20 @@ export default function UserProductManager() {
     }
   }
 
+  const fetchUserDemands = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demands/by-user?email=${user?.email}`
+      )
+      if (response.ok) {
+        const data = await response.json()
+        setDemands(data.data || [])
+      }
+    } catch (error) {
+      console.error("Failed to fetch demands:", error)
+    }
+  }
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -90,8 +127,8 @@ export default function UserProductManager() {
   }
 
   const handleAddProduct = async () => {
-    if (!productForm.name || !productForm.category || !productForm.quantity || !productForm.pricePerUnit) {
-      showToast('error', 'Missing Information', 'Please fill in all required fields.')
+    if (!productForm.name || !productForm.quantity || !productForm.unitPrice || !productForm.quantityCategory || !selectedImage) {
+      showToast('error', 'Missing Information', 'Please fill in all required fields including image.')
       return
     }
 
@@ -104,16 +141,19 @@ export default function UserProductManager() {
     try {
       const formData = new FormData()
       formData.append('name', productForm.name)
-      formData.append('description', productForm.description)
-      formData.append('category', productForm.category)
-      formData.append('quantity', productForm.quantity)
-      formData.append('unit', productForm.unit)
-      formData.append('pricePerUnit', productForm.pricePerUnit)
-      formData.append('location', productForm.location)
-      
-      if (selectedImage) {
-        formData.append('image', selectedImage)
-      }
+      formData.append('description', productForm.description || '')
+      formData.append('quantity', productForm.quantity.toString())
+      formData.append('quantityCategory', productForm.quantityCategory)
+      formData.append('unitPrice', productForm.unitPrice.toString())
+      formData.append('location', productForm.location || '')
+      formData.append('image', selectedImage)
+
+      console.log('Sending product data:', {
+        name: productForm.name,
+        quantity: productForm.quantity,
+        unitPrice: productForm.unitPrice,
+        quantityCategory: productForm.quantityCategory,
+      })
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/add?email=${user.email}`,
@@ -140,7 +180,7 @@ export default function UserProductManager() {
   }
 
   const handleAddDemand = async () => {
-    if (!demandForm.productName || !demandForm.quantity || !demandForm.location) {
+    if (!demandForm.productName || !demandForm.quantity || !demandForm.quantityCategory || !demandForm.phoneContact) {
       showToast('error', 'Missing Information', 'Please fill in all required fields.')
       return
     }
@@ -152,14 +192,26 @@ export default function UserProductManager() {
 
     setSubmitting(true)
     try {
+      const payload = {
+        productName: demandForm.productName,
+        description: demandForm.description || '',
+        offerPrice: demandForm.offerPrice ? parseFloat(demandForm.offerPrice) : null,
+        quantity: parseInt(demandForm.quantity),
+        quantityCategory: demandForm.quantityCategory,
+        location: demandForm.location || '',
+        phoneContact: demandForm.phoneContact,
+      }
+
+      console.log('Sending demand data:', payload)
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/demands/add?email=${user.email}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demand?buyerEmail=${user.email}`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(demandForm),
+          body: JSON.stringify(payload),
         }
       )
 
@@ -167,6 +219,7 @@ export default function UserProductManager() {
         showToast('success', 'Demand Added!', 'Your demand request has been submitted.')
         setIsAddDemandOpen(false)
         resetDemandForm()
+        fetchUserDemands()
       } else {
         const errorText = await response.text()
         throw new Error(errorText || 'Failed to add demand')
@@ -182,10 +235,9 @@ export default function UserProductManager() {
     setProductForm({
       name: "",
       description: "",
-      category: "",
       quantity: "",
-      unit: "",
-      pricePerUnit: "",
+      quantityCategory: "",
+      unitPrice: "",
       location: "",
     })
     setSelectedImage(null)
@@ -196,8 +248,10 @@ export default function UserProductManager() {
     setDemandForm({
       productName: "",
       quantity: "",
-      unit: "",
+      quantityCategory: "",
+      offerPrice: "",
       location: "",
+      phoneContact: "",
       description: "",
     })
   }
@@ -240,31 +294,14 @@ export default function UserProductManager() {
                 <DialogDescription>Add your product to the marketplace</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Product Name *</Label>
-                    <Input
-                      id="name"
-                      value={productForm.name}
-                      onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                      placeholder="e.g., Premium Rice"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category *</Label>
-                    <Select value={productForm.category} onValueChange={(value) => setProductForm({ ...productForm, category: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="grains">Grains</SelectItem>
-                        <SelectItem value="tubers">Tubers</SelectItem>
-                        <SelectItem value="legumes">Legumes</SelectItem>
-                        <SelectItem value="vegetables">Vegetables</SelectItem>
-                        <SelectItem value="fruits">Fruits</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Product Name *</Label>
+                  <Input
+                    id="name"
+                    value={productForm.name}
+                    onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                    placeholder="e.g., Premium Rice"
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -290,8 +327,8 @@ export default function UserProductManager() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="unit">Unit *</Label>
-                    <Select value={productForm.unit} onValueChange={(value) => setProductForm({ ...productForm, unit: value })}>
+                    <Label htmlFor="quantityCategory">Unit *</Label>
+                    <Select value={productForm.quantityCategory} onValueChange={(value) => setProductForm({ ...productForm, quantityCategory: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select unit" />
                       </SelectTrigger>
@@ -304,35 +341,36 @@ export default function UserProductManager() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="pricePerUnit">Price per Unit *</Label>
+                    <Label htmlFor="unitPrice">Price per Unit *</Label>
                     <Input
-                      id="pricePerUnit"
+                      id="unitPrice"
                       type="number"
-                      value={productForm.pricePerUnit}
-                      onChange={(e) => setProductForm({ ...productForm, pricePerUnit: e.target.value })}
+                      value={productForm.unitPrice}
+                      onChange={(e) => setProductForm({ ...productForm, unitPrice: e.target.value })}
                       placeholder="5000"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location *</Label>
+                  <Label htmlFor="location">Location</Label>
                   <Input
                     id="location"
                     value={productForm.location}
                     onChange={(e) => setProductForm({ ...productForm, location: e.target.value })}
-                    placeholder="e.g., Makurdi"
+                    placeholder="e.g., Makurdi (optional)"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="image">Product Image (Optional)</Label>
+                  <Label htmlFor="image">Product Image *</Label>
                   <Input
                     id="image"
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
                     className="cursor-pointer"
+                    required
                   />
                   {imagePreview && (
                     <div className="mt-2">
@@ -349,7 +387,17 @@ export default function UserProductManager() {
                   <Button variant="outline" onClick={() => setIsAddProductOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleAddProduct} disabled={submitting}>
+                  <Button 
+                    onClick={handleAddProduct} 
+                    disabled={
+                      submitting || 
+                      !productForm.name || 
+                      !productForm.quantity || 
+                      !productForm.unitPrice || 
+                      !productForm.quantityCategory || 
+                      !selectedImage
+                    }
+                  >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                     Add Product
                   </Button>
@@ -394,27 +442,50 @@ export default function UserProductManager() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="demandUnit">Unit *</Label>
-                    <Select value={demandForm.unit} onValueChange={(value) => setDemandForm({ ...demandForm, unit: value })}>
+                    <Select value={demandForm.quantityCategory} onValueChange={(value) => setDemandForm({ ...demandForm, quantityCategory: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select unit" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="kg">Kilograms (kg)</SelectItem>
-                        <SelectItem value="bags">Bags</SelectItem>
+                        <SelectItem value="bag">Bags</SelectItem>
                         <SelectItem value="tubers">Tubers</SelectItem>
-                        <SelectItem value="pieces">Pieces</SelectItem>
+                        <SelectItem value="rubber">Rubber</SelectItem>
+                        <SelectItem value="ton">Ton</SelectItem>
+                        <SelectItem value="kg">Kilograms (kg)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="demandLocation">Location *</Label>
+                  <Label htmlFor="offerPrice">Offer Price (Optional)</Label>
+                  <Input
+                    id="offerPrice"
+                    type="number"
+                    value={demandForm.offerPrice}
+                    onChange={(e) => setDemandForm({ ...demandForm, offerPrice: e.target.value })}
+                    placeholder="Your offer price per unit"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phoneContact">Phone Contact *</Label>
+                  <Input
+                    id="phoneContact"
+                    type="tel"
+                    value={demandForm.phoneContact}
+                    onChange={(e) => setDemandForm({ ...demandForm, phoneContact: e.target.value })}
+                    placeholder="e.g., +234 800 000 0000"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="demandLocation">Location</Label>
                   <Input
                     id="demandLocation"
                     value={demandForm.location}
                     onChange={(e) => setDemandForm({ ...demandForm, location: e.target.value })}
-                    placeholder="e.g., Makurdi"
+                    placeholder="e.g., Makurdi (optional)"
                   />
                 </div>
 
@@ -433,7 +504,16 @@ export default function UserProductManager() {
                   <Button variant="outline" onClick={() => setIsAddDemandOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleAddDemand} disabled={submitting}>
+                  <Button 
+                    onClick={handleAddDemand} 
+                    disabled={
+                      submitting || 
+                      !demandForm.productName || 
+                      !demandForm.quantity || 
+                      !demandForm.quantityCategory || 
+                      !demandForm.phoneContact
+                    }
+                  >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                     Submit Demand
                   </Button>
@@ -444,66 +524,114 @@ export default function UserProductManager() {
         </div>
       </div>
 
-      {/* Products List */}
-      {products.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {products.map((product) => (
-            <Card key={product.id}>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>{product.name}</span>
-                  <Badge className={product.available ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
-                    {product.available ? "Available" : "Unavailable"}
-                  </Badge>
-                </CardTitle>
-                <CardDescription>{product.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Category</span>
-                    <span className="font-semibold capitalize">{product.category}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Quantity</span>
-                    <span className="font-semibold">{product.quantity} {product.unit}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Price per {product.unit}</span>
-                    <span className="font-semibold text-green-600">{formatPrice(product.pricePerUnit)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Location</span>
-                    <span className="font-semibold">{product.location}</span>
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1 text-red-600 border-red-600 hover:bg-red-50">
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Remove
-                  </Button>
-                </div>
+      {/* Tabs for Products and Demands */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="products">
+            <ShoppingBag className="h-4 w-4 mr-2" />
+            My Products
+          </TabsTrigger>
+          <TabsTrigger value="demands">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            My Demands
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="products" className="space-y-4">
+          {products.length > 0 ? (
+            <ProductTable 
+              products={products} 
+              onEdit={(product) => {
+                // TODO: Implement edit functionality
+                console.log('Edit product:', product)
+              }}
+              onDelete={(productId) => {
+                // TODO: Implement delete functionality
+                console.log('Delete product:', productId)
+              }}
+              itemsPerPage={10}
+            />
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Products Yet</h3>
+                <p className="text-gray-600 mb-4">Start adding your products to the marketplace</p>
+                <Button onClick={() => setIsAddProductOpen(true)} className="bg-green-600 hover:bg-green-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Product
+                </Button>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Products Yet</h3>
-            <p className="text-gray-600 mb-4">Start adding your products to the marketplace</p>
-            <Button onClick={() => setIsAddProductOpen(true)} className="bg-green-600 hover:bg-green-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Product
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </TabsContent>
+
+        <TabsContent value="demands" className="space-y-4">
+          {demands.length > 0 ? (
+            <div className="grid gap-4">
+              {demands.map((demand) => (
+                <Card key={demand.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          {demand.productName}
+                          {demand.status && (
+                            <Badge variant={demand.status === "FULFILLED" ? "default" : "secondary"}>
+                              {demand.status}
+                            </Badge>
+                          )}
+                        </CardTitle>
+                        {demand.description && (
+                          <CardDescription>{demand.description}</CardDescription>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="font-medium text-gray-700">Quantity</p>
+                        <p className="text-gray-600">{demand.quantity} {demand.quantityCategory}</p>
+                      </div>
+                      {demand.offerPrice && (
+                        <div>
+                          <p className="font-medium text-gray-700">Offer Price</p>
+                          <p className="text-gray-600 text-green-600 font-semibold">
+                            ₦{demand.offerPrice.toLocaleString()}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-gray-700">Contact</p>
+                        <p className="text-gray-600">{demand.phoneContact}</p>
+                      </div>
+                      {demand.location && (
+                        <div>
+                          <p className="font-medium text-gray-700">Location</p>
+                          <p className="text-gray-600">{demand.location}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Demands Yet</h3>
+                <p className="text-gray-600 mb-4">Create demand requests for products you need</p>
+                <Button onClick={() => setIsAddDemandOpen(true)} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Demand
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

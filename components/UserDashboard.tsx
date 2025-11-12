@@ -29,6 +29,7 @@ import {
     BarChart3,
     Users,
     ShoppingBag,
+    Loader2,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/app/contexts/AuthContext"
@@ -42,7 +43,7 @@ const sidebarItems = [
   { id: "crops", label: "My Crops", icon: <Leaf className="h-5 w-5" /> },
   { id: "products", label: "My Products", icon: <ShoppingBag className="h-5 w-5" /> },
   { id: "weather", label: "Weather", icon: <CloudRain className="h-5 w-5" /> },
-  { id: "market", label: "Market", icon: <DollarSign className="h-5 w-5" /> },
+  { id: "market", label: "Market", icon: <span className="text-lg font-bold">₦</span> },
   { id: "community", label: "Community", icon: <Users className="h-5 w-5" /> },
 ]
 
@@ -51,18 +52,39 @@ export default function UserDashboard() {
     const router = useRouter()
     const [activeTab, setActiveTab] = useState("overview")
     const [notifications, setNotifications] = useState(3)
+    const [weatherData, setWeatherData] = useState<any>(null)
+    const [weatherLoading, setWeatherLoading] = useState(true)
+
+    useEffect(() => {
+        fetchWeather()
+    }, [])
+
+    const fetchWeather = async () => {
+        try {
+            const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY
+            const response = await fetch(
+                `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=Makurdi&aqi=no`
+            )
+            if (response.ok) {
+                const data = await response.json()
+                setWeatherData({
+                    temperature: Math.round(data.current.temp_c),
+                    humidity: data.current.humidity,
+                    rainfall: data.current.precip_mm,
+                    forecast: data.current.condition.text,
+                    location: `${data.location.name}, ${data.location.region}`,
+                })
+            }
+        } catch (error) {
+            console.error("Failed to fetch weather:", error)
+        } finally {
+            setWeatherLoading(false)
+        }
+    }
 
     const handleLogout = () => {
         logout()
         router.push("/")
-    }
-
-    const weatherData = {
-        temperature: 28,
-        humidity: 65,
-        rainfall: 12,
-        forecast: "Partly cloudy with chance of rain",
-        location: "Benue State",
     }
 
     const cropData = [
@@ -91,7 +113,7 @@ export default function UserDashboard() {
                 items={sidebarItems}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
-                title="BFPC Dashboard"
+                title="Dashboard"
             />
 
             {/* Main Content */}
@@ -159,60 +181,60 @@ export default function UserDashboard() {
                         {activeTab === "overview" && (
                             <div className="space-y-6">
                                 {/* Weather Widget */}
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center space-x-2">
-                                            <CloudRain className="h-5 w-5" />
-                                            <span>Today's Weather in {weatherData.location}</span>
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div className="flex items-center space-x-2">
-                                                <Thermometer className="h-5 w-5 text-orange-500" />
-                                                <div>
-                                                    <p className="text-sm text-gray-600">Temperature</p>
-                                                    <p className="text-lg font-semibold">{weatherData.temperature}°C</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <Droplets className="h-5 w-5 text-blue-500" />
-                                                <div>
-                                                    <p className="text-sm text-gray-600">Humidity</p>
-                                                    <p className="text-lg font-semibold">{weatherData.humidity}%</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <CloudRain className="h-5 w-5 text-gray-500" />
-                                                <div>
-                                                    <p className="text-sm text-gray-600">Rainfall</p>
-                                                    <p className="text-lg font-semibold">{weatherData.rainfall}mm</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <Sun className="h-5 w-5 text-yellow-500" />
-                                                <div>
-                                                    <p className="text-sm text-gray-600">Forecast</p>
-                                                    <p className="text-sm">{weatherData.forecast}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-
-                                {/* Quick Stats */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {weatherLoading ? (
                                     <Card>
-                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                            <CardTitle className="text-sm font-medium">Total Farm Area</CardTitle>
-                                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="text-2xl font-bold">{user?.farmDetails?.farmSize || 0} ha</div>
-                                            <p className="text-xs text-muted-foreground">{user?.farmDetails?.location || "Benue State"}</p>
+                                        <CardContent className="p-6">
+                                            <div className="flex items-center justify-center">
+                                                <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+                                                <span className="ml-2 text-gray-600">Loading weather...</span>
+                                            </div>
                                         </CardContent>
                                     </Card>
+                                ) : weatherData ? (
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center space-x-2">
+                                                <CloudRain className="h-5 w-5" />
+                                                <span>Today's Weather in {weatherData.location}</span>
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                                <div className="flex items-center space-x-2">
+                                                    <Thermometer className="h-5 w-5 text-orange-500" />
+                                                    <div>
+                                                        <p className="text-sm text-gray-600">Temperature</p>
+                                                        <p className="text-lg font-semibold">{weatherData.temperature}°C</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Droplets className="h-5 w-5 text-blue-500" />
+                                                    <div>
+                                                        <p className="text-sm text-gray-600">Humidity</p>
+                                                        <p className="text-lg font-semibold">{weatherData.humidity}%</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <CloudRain className="h-5 w-5 text-gray-500" />
+                                                    <div>
+                                                        <p className="text-sm text-gray-600">Rainfall</p>
+                                                        <p className="text-lg font-semibold">{weatherData.rainfall}mm</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Sun className="h-5 w-5 text-yellow-500" />
+                                                    <div>
+                                                        <p className="text-sm text-gray-600">Forecast</p>
+                                                        <p className="text-sm">{weatherData.forecast}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ) : null}
 
+                                {/* Quick Stats */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <Card>
                                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                             <CardTitle className="text-sm font-medium">Active Crops</CardTitle>
@@ -226,23 +248,12 @@ export default function UserDashboard() {
 
                                     <Card>
                                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                            <CardTitle className="text-sm font-medium">This Month Revenue</CardTitle>
-                                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                            <CardTitle className="text-sm font-medium">Location</CardTitle>
+                                            <MapPin className="h-4 w-4 text-muted-foreground" />
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="text-2xl font-bold">₦245,000</div>
-                                            <p className="text-xs text-muted-foreground">+12% from last month</p>
-                                        </CardContent>
-                                    </Card>
-
-                                    <Card>
-                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                            <CardTitle className="text-sm font-medium">Farm Health Score</CardTitle>
-                                            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="text-2xl font-bold">85%</div>
-                                            <Progress value={85} className="mt-2" />
+                                            <div className="text-2xl font-bold">{user?.farmDetails?.location || "Benue State"}</div>
+                                            <p className="text-xs text-muted-foreground">Your farming location</p>
                                         </CardContent>
                                     </Card>
                                 </div>
