@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { useRouter } from "next/navigation"
-import Dashboard from "components/Dashboard"
+import UserDashboard from "@/components/UserDashboard"
 import Loading from "@/components/Loading"
 
 export default function DashboardPage() {
@@ -20,5 +20,5 @@ export default function DashboardPage() {
     return <Loading />
   }
 
-  return <Dashboard />
+  return <UserDashboard />
 }

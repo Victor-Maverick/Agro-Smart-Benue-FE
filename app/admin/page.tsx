@@ -2,22 +2,35 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Shield, Calendar, DollarSign, Users, BarChart3 } from "lucide-react"
+import { Shield, Calendar, DollarSign, Users, BarChart3, Sprout, Package } from "lucide-react"
+import CollapsibleSidebar from "@/components/CollapsibleSidebar"
 import AdminEventManager from "@/components/AdminEventManager"
 import AdminMarketPriceManager from "@/components/AdminMarketPriceManager"
 import AdminUserManager from "@/components/AdminUserManager"
 import AdminCropManager from "@/components/AdminCropManager"
+import AdminProductsDemandsManager from "@/components/AdminProductsDemandsManager"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#14b8a6']
 
+const sidebarItems = [
+  { id: "overview", label: "Overview", icon: <BarChart3 className="h-5 w-5" /> },
+  { id: "events", label: "Events", icon: <Calendar className="h-5 w-5" /> },
+  { id: "prices", label: "Market Prices", icon: <DollarSign className="h-5 w-5" /> },
+  { id: "products", label: "Products & Demands", icon: <Package className="h-5 w-5" /> },
+  { id: "crops", label: "Crops", icon: <Sprout className="h-5 w-5" /> },
+  { id: "users", label: "Users", icon: <Users className="h-5 w-5" /> },
+]
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
   const [statistics, setStatistics] = useState<any>(null)
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
+  const [loadingEvents, setLoadingEvents] = useState(true)
 
   useEffect(() => {
     fetchStatistics()
+    fetchUpcomingEvents()
   }, [])
 
   const fetchStatistics = async () => {
@@ -32,6 +45,20 @@ export default function AdminDashboard() {
     }
   }
 
+  const fetchUpcomingEvents = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/upcoming`)
+      if (response.ok) {
+        const data = await response.json()
+        setUpcomingEvents(data.data || [])
+      }
+    } catch (error) {
+      console.error("Failed to fetch upcoming events:", error)
+    } finally {
+      setLoadingEvents(false)
+    }
+  }
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -40,39 +67,44 @@ export default function AdminDashboard() {
     }).format(price)
   }
 
+  const formatEventDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2">
-              <Shield className="h-6 w-6 text-green-600" />
-              <h1 className="text-xl font-semibold text-gray-900">BFPC Admin Dashboard</h1>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Collapsible Sidebar */}
+      <CollapsibleSidebar
+        items={sidebarItems}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        title="BFPC Admin"
+      />
+
+      {/* Main Content */}
+      <div className="flex-1">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-2">
+                <Shield className="h-6 w-6 text-green-600" />
+                <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-lg text-gray-600">
-            Manage events, market prices, and platform content
-          </p>
-        </div>
+        {/* Content Area */}
+        <div className="px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-6">
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="prices">Market Prices</TabsTrigger>
-            <TabsTrigger value="crops">Crops</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
+          {activeTab === "overview" && (
+            <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
@@ -135,7 +167,7 @@ export default function AdminDashboard() {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                        label={({ name, percent }) => `${name}: ${(Number(percent || 0) * 100).toFixed(0)}%`}
                         outerRadius={100}
                         fill="#8884d8"
                         dataKey="value"
@@ -170,31 +202,29 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Events</CardTitle>
-                  <CardDescription>Latest agricultural events and programs</CardDescription>
+                  <CardTitle>Upcoming Events</CardTitle>
+                  <CardDescription>Events from database</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Rice Farming Workshop</p>
-                      <p className="text-xs text-gray-500">Makurdi - Dec 15, 2024</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Digital Marketing Conference</p>
-                      <p className="text-xs text-gray-500">Gboko - Dec 20, 2024</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Cassava Processing Seminar</p>
-                      <p className="text-xs text-gray-500">Otukpo - Dec 25, 2024</p>
-                    </div>
-                  </div>
+                  {loadingEvents ? (
+                    <p className="text-sm text-gray-500">Loading events...</p>
+                  ) : upcomingEvents.length > 0 ? (
+                    upcomingEvents.slice(0, 3).map((event, index) => (
+                      <div key={event.id} className="flex items-center space-x-4">
+                        <div className={`w-2 h-2 rounded-full ${
+                          index === 0 ? 'bg-green-500' : index === 1 ? 'bg-blue-500' : 'bg-orange-500'
+                        }`}></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{event.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {event.location} - {formatEventDate(event.eventDate)}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No upcoming events</p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -237,24 +267,16 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+            </div>
+          )}
 
-          <TabsContent value="events">
-            <AdminEventManager />
-          </TabsContent>
-
-          <TabsContent value="prices">
-            <AdminMarketPriceManager />
-          </TabsContent>
-
-          <TabsContent value="crops">
-            <AdminCropManager />
-          </TabsContent>
-
-          <TabsContent value="users">
-            <AdminUserManager />
-          </TabsContent>
-        </Tabs>
+          {activeTab === "events" && <AdminEventManager />}
+          {activeTab === "prices" && <AdminMarketPriceManager />}
+          {activeTab === "products" && <AdminProductsDemandsManager />}
+          {activeTab === "crops" && <AdminCropManager />}
+          {activeTab === "users" && <AdminUserManager />}
+          </div>
+        </div>
       </div>
     </div>
   )

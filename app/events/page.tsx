@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Calendar,
   MapPin,
@@ -119,23 +120,55 @@ const mockEvents = [
 
 export default function EventsPage() {
   const router = useRouter()
-  const [events, setEvents] = useState(mockEvents)
+  const [events, setEvents] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedFilter, setSelectedFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("all")
+  const [eventTypeFilter, setEventTypeFilter] = useState("all")
 
-  // Filter events based on search and filters
+  useEffect(() => {
+    fetchEvents()
+  }, [activeTab, eventTypeFilter])
+
+  const fetchEvents = async () => {
+    setLoading(true)
+    try {
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events`
+      
+      // Fetch based on active tab
+      if (activeTab === "upcoming") {
+        url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/upcoming`
+      } else if (activeTab === "physical") {
+        url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/all-by-mode?mode=PHYSICAL`
+      } else if (activeTab === "virtual") {
+        url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/all-by-mode?mode=VIRTUAL`
+      } else if (activeTab === "all") {
+        url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/all-active`
+      }
+
+      // Add event type filter if selected
+      if (eventTypeFilter !== "all") {
+        url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/all-by-type?eventType=${eventTypeFilter}`
+      }
+
+      const response = await fetch(url)
+      if (response.ok) {
+        const data = await response.json()
+        setEvents(data.data || [])
+      }
+    } catch (error) {
+      console.error("Failed to fetch events:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Filter events based on search
   const filteredEvents = events.filter((event) => {
     const matchesSearch = 
-      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-
-    if (activeTab === "all") return matchesSearch
-    if (activeTab === "upcoming") return event.status === "upcoming" && matchesSearch
-    if (activeTab === "completed") return event.status === "completed" && matchesSearch
-    if (activeTab === "featured") return event.featured && matchesSearch
+      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.location?.toLowerCase().includes(searchQuery.toLowerCase())
 
     return matchesSearch
   })
@@ -213,19 +246,25 @@ export default function EventsPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search events by title, location, or tags..."
+                  placeholder="Search events by title, location..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
               </div>
-              <Button
-                variant="outline"
-                className="border-green-300 text-green-700 hover:bg-green-50 bg-transparent"
+              <select
+                value={eventTypeFilter}
+                onChange={(e) => setEventTypeFilter(e.target.value)}
+                className="px-4 py-2 border border-green-300 rounded-md text-green-700 bg-white hover:bg-green-50"
               >
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
+                <option value="all">All Types</option>
+                <option value="workshop">Workshop</option>
+                <option value="seminar">Seminar</option>
+                <option value="conference">Conference</option>
+                <option value="training">Training</option>
+                <option value="market_day">Market Day</option>
+                <option value="field_day">Field Day</option>
+              </select>
             </div>
           </CardContent>
         </Card>
@@ -234,33 +273,38 @@ export default function EventsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4 bg-green-50 border border-green-200">
             <TabsTrigger
-              value="all"
-              className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
-            >
-              All Events
-            </TabsTrigger>
-            <TabsTrigger
               value="upcoming"
               className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
             >
               Upcoming
             </TabsTrigger>
             <TabsTrigger
-              value="featured"
+              value="all"
               className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
             >
-              Featured
+              All Events
             </TabsTrigger>
             <TabsTrigger
-              value="completed"
+              value="physical"
               className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
             >
-              Past Events
+              Physical
+            </TabsTrigger>
+            <TabsTrigger
+              value="virtual"
+              className="data-[state=active]:bg-green-600 data-[state=active]:text-white"
+            >
+              Virtual
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-6">
-            {filteredEvents.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading events...</p>
+              </div>
+            ) : filteredEvents.length === 0 ? (
               <Card className="border-green-200">
                 <CardContent className="p-12 text-center">
                   <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -281,27 +325,22 @@ export default function EventsPage() {
                   >
                     <div className="relative">
                       <img
-                        src={event.image || "/placeholder.svg"}
+                        src={event.imageUrl || "/placeholder.svg"}
                         alt={event.title}
                         className="w-full h-48 object-cover rounded-t-lg"
                       />
-                      {event.featured && (
-                        <Badge className="absolute top-3 left-3 bg-orange-500 text-white">
-                          Featured
-                        </Badge>
-                      )}
                       <Badge
-                        className={`absolute top-3 right-3 ${getStatusColor(event.status)}`}
+                        className={`absolute top-3 right-3 ${getStatusColor(event.isActive ? "upcoming" : "completed")}`}
                       >
-                        {event.status}
+                        {event.isActive ? "Active" : "Completed"}
                       </Badge>
                     </div>
 
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between gap-2">
                         <CardTitle className="text-lg leading-tight">{event.title}</CardTitle>
-                        <Badge className={getEventTypeColor(event.type)}>
-                          {event.type}
+                        <Badge className={getEventTypeColor(event.eventType)}>
+                          {event.eventType}
                         </Badge>
                       </div>
                       <CardDescription className="text-sm line-clamp-2">
@@ -313,72 +352,49 @@ export default function EventsPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center gap-2 text-gray-600">
                           <CalendarDays className="h-4 w-4" />
-                          <span>{formatDate(event.date)}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Clock className="h-4 w-4" />
-                          <span>{event.time} - {event.endTime}</span>
+                          <span>{formatDate(event.eventDate)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-600">
                           <MapPin className="h-4 w-4" />
                           <span className="line-clamp-1">{event.location}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Users className="h-4 w-4" />
-                          <span>
-                            {event.registered}/{event.capacity} registered
-                            {isEventFull(event) && (
-                              <Badge className="ml-2 bg-red-100 text-red-800 text-xs">
-                                Full
-                              </Badge>
-                            )}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1">
-                        {event.tags.slice(0, 3).map((tag, index) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="text-xs border-green-300 text-green-700"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
+                        {event.organizer && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Users className="h-4 w-4" />
+                            <span>{event.organizer}</span>
+                          </div>
+                        )}
+                        {event.maxParticipants && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Users className="h-4 w-4" />
+                            <span>Max: {event.maxParticipants} participants</span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center justify-between pt-2">
-                        <div className="text-lg font-bold text-green-600">
-                          {event.price}
-                        </div>
+                        <Badge variant="outline" className="border-green-300 text-green-700">
+                          {event.eventMode || "PHYSICAL"}
+                        </Badge>
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-green-300 text-green-700 hover:bg-green-50"
-                          >
-                            <Share2 className="h-4 w-4" />
-                          </Button>
-                          {event.status === "upcoming" && !isEventFull(event) ? (
+                          {event.registrationUrl && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-green-300 text-green-700 hover:bg-green-50"
+                              onClick={() => window.open(event.registrationUrl, '_blank')}
+                            >
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              Join
+                            </Button>
+                          )}
+                          {event.isActive && (
                             <Button
                               size="sm"
                               className="bg-green-600 hover:bg-green-700"
                               onClick={() => handleRegister(event.id)}
                             >
                               Register
-                            </Button>
-                          ) : event.status === "upcoming" && isEventFull(event) ? (
-                            <Button size="sm" disabled>
-                              Full
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-gray-300 text-gray-700"
-                            >
-                              View Details
                             </Button>
                           )}
                         </div>

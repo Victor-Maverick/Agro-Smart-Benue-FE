@@ -84,7 +84,7 @@ export default function BFPCLanding() {
               <a href="#hero"
                 className="flex items-center space-x-2 text-green-800 hover:text-green-900 transition-colors">
                 <Image src="/images/header image.png" alt="BFPC Logo" width={64} height={64} />
-                <p className="font-bold leading-tight">Agro <span className="text-orange-600">Smart</span> <br />Benue</p>
+                <p className="font-bold leading-tight">Benue <span className="text-orange-600">Farmers</span> <br />Peace Corps</p>
               </a>
             </div>
             <div className="hidden md:flex space-x-8">

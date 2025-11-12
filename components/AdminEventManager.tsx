@@ -41,10 +41,13 @@ export default function AdminEventManager() {
     endDate: "",
     location: "",
     organizer: "",
+    eventMode: "PHYSICAL",
     eventType: "",
     targetAudience: "",
     imageUrl: "",
     meetingLink: "",
+    maxParticipants: "",
+    isUnlimited: true,
   })
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>("")
@@ -57,7 +60,7 @@ export default function AdminEventManager() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/all`)
       
       if (response.ok) {
         const data = await response.json()
@@ -94,10 +97,13 @@ export default function AdminEventManager() {
       endDate: "",
       location: "",
       organizer: "",
+      eventMode: "PHYSICAL",
       eventType: "",
       targetAudience: "",
       imageUrl: "",
       meetingLink: "",
+      maxParticipants: "",
+      isUnlimited: true,
     })
     setEditingEvent(null)
     setSelectedImage(null)
@@ -107,6 +113,12 @@ export default function AdminEventManager() {
   const handleSubmit = async () => {
     if (!formData.title || !formData.description || !formData.eventDate || !formData.location) {
       showToast('error', 'Missing Information', 'Please fill in all required fields.')
+      return
+    }
+
+    // Validate meeting link for virtual/hybrid events
+    if ((formData.eventMode === "VIRTUAL" || formData.eventMode === "HYBRID") && !formData.meetingLink) {
+      showToast('error', 'Missing Meeting Link', 'Meeting link is required for virtual and hybrid events.')
       return
     }
 
@@ -129,12 +141,18 @@ export default function AdminEventManager() {
       }
       formDataToSend.append('location', formData.location)
       formDataToSend.append('organizer', formData.organizer)
+      formDataToSend.append('eventMode', formData.eventMode)
       formDataToSend.append('eventType', formData.eventType)
       formDataToSend.append('targetAudience', formData.targetAudience)
       
-      // Add meeting link if provided
+      // Add meeting link if provided (required for VIRTUAL/HYBRID)
       if (formData.meetingLink) {
         formDataToSend.append('meetingLink', formData.meetingLink)
+      }
+      
+      // Add max participants if not unlimited
+      if (!formData.isUnlimited && formData.maxParticipants) {
+        formDataToSend.append('maxParticipants', formData.maxParticipants)
       }
       
       // Add image if selected
@@ -174,10 +192,13 @@ export default function AdminEventManager() {
       endDate: event.endDate ? new Date(event.endDate).toISOString().slice(0, 16) : "",
       location: event.location,
       organizer: event.organizer,
+      eventMode: (event as any).eventMode || "PHYSICAL",
       eventType: event.eventType,
       targetAudience: event.targetAudience,
       imageUrl: event.imageUrl || "",
-      meetingLink: event.registrationUrl || "", // Map registrationUrl to meetingLink for backward compatibility
+      meetingLink: event.registrationUrl || "",
+      maxParticipants: (event as any).maxParticipants?.toString() || "",
+      isUnlimited: !(event as any).maxParticipants,
     })
     if (event.imageUrl) {
       setImagePreview(event.imageUrl)
@@ -325,23 +346,84 @@ export default function AdminEventManager() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="eventMode">Event Mode *</Label>
+                  <Select value={formData.eventMode} onValueChange={(value) => handleInputChange("eventMode", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select event mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PHYSICAL">Physical</SelectItem>
+                      <SelectItem value="VIRTUAL">Virtual</SelectItem>
+                      <SelectItem value="HYBRID">Hybrid</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="targetAudience">Target Audience</Label>
+                  <Select value={formData.targetAudience} onValueChange={(value) => handleInputChange("targetAudience", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select target audience" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="farmers">Farmers</SelectItem>
+                      <SelectItem value="buyers">Buyers</SelectItem>
+                      <SelectItem value="extension_officers">Extension Officers</SelectItem>
+                      <SelectItem value="all">All</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Conditional Meeting Link - Only show for VIRTUAL or HYBRID events */}
+              {(formData.eventMode === "VIRTUAL" || formData.eventMode === "HYBRID") && (
+                <div className="space-y-2">
+                  <Label htmlFor="meetingLink">Meeting Link *</Label>
+                  <Input
+                    id="meetingLink"
+                    value={formData.meetingLink}
+                    onChange={(e) => handleInputChange("meetingLink", e.target.value)}
+                    placeholder="Enter virtual meeting link (e.g., Zoom, Google Meet)"
+                  />
+                  <p className="text-sm text-gray-500">
+                    Required for virtual and hybrid events
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-2">
-                <Label htmlFor="targetAudience">Target Audience</Label>
-                <Select value={formData.targetAudience} onValueChange={(value) => handleInputChange("targetAudience", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select target audience" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="farmers">Farmers</SelectItem>
-                    <SelectItem value="buyers">Buyers</SelectItem>
-                    <SelectItem value="extension_officers">Extension Officers</SelectItem>
-                    <SelectItem value="all">All</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Max Participants</Label>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.isUnlimited}
+                      onChange={(e) => {
+                        handleInputChange("isUnlimited", e.target.checked)
+                        if (e.target.checked) {
+                          handleInputChange("maxParticipants", "")
+                        }
+                      }}
+                      className="rounded border-gray-300"
+                    />
+                    <span className="text-sm">Unlimited</span>
+                  </label>
+                  {!formData.isUnlimited && (
+                    <Input
+                      type="number"
+                      min="1"
+                      value={formData.maxParticipants}
+                      onChange={(e) => handleInputChange("maxParticipants", e.target.value)}
+                      placeholder="Enter max participants"
+                      className="w-48"
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="eventImage">Event Image</Label>
+                <Label htmlFor="eventImage">Event Image (Optional)</Label>
                 <div className="space-y-2">
                   <Input
                     id="eventImage"
@@ -360,19 +442,6 @@ export default function AdminEventManager() {
                     </div>
                   )}
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="meetingLink">Meeting Link (Optional)</Label>
-                <Input
-                  id="meetingLink"
-                  value={formData.meetingLink}
-                  onChange={(e) => handleInputChange("meetingLink", e.target.value)}
-                  placeholder="Virtual meeting link (if applicable)"
-                />
-                <p className="text-sm text-gray-500">
-                  Add a meeting link if this is a virtual event
-                </p>
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">
@@ -417,7 +486,7 @@ export default function AdminEventManager() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="font-medium text-gray-700">Date & Time</p>
                     <p className="text-gray-600">{formatDate(event.eventDate)}</p>
@@ -427,10 +496,29 @@ export default function AdminEventManager() {
                     <p className="text-gray-600">{event.location}</p>
                   </div>
                   <div>
+                    <p className="font-medium text-gray-700">Mode</p>
+                    <Badge variant="outline" className="capitalize">
+                      {(event as any).eventMode || "Physical"}
+                    </Badge>
+                  </div>
+                  <div>
                     <p className="font-medium text-gray-700">Type</p>
                     <p className="text-gray-600 capitalize">{event.eventType}</p>
                   </div>
                 </div>
+                {event.registrationUrl && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="font-medium text-gray-700 text-sm">Meeting Link</p>
+                    <a 
+                      href={event.registrationUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      {event.registrationUrl}
+                    </a>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))

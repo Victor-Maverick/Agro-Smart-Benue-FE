@@ -60,8 +60,8 @@ export default function EnhancedEventsHero() {
 
   const fetchData = async () => {
     try {
-      // Fetch events
-      const eventsResponse = await fetch("/api/events/upcoming")
+      // Fetch ALL events from database
+      const eventsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/upcoming`)
       if (eventsResponse.ok) {
         const eventsData = await eventsResponse.json()
         setEvents(eventsData.data || [])
@@ -249,10 +249,10 @@ export default function EnhancedEventsHero() {
           )}
         </div>
 
-        {/* Quick Event Cards */}
+        {/* All Event Cards */}
         {events.length > 1 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            {events.slice(0, 3).map((event, index) => (
+            {events.map((event, index) => (
               <Card
                 key={event.id}
                 className={`border-green-200 hover:shadow-lg transition-all duration-300 cursor-pointer ${
