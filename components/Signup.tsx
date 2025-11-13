@@ -101,8 +101,9 @@ export default function Signup() {
     try {
       const result = await signup({ ...formData, captchaToken })
       if (result.success) {
-        showToast('success', 'Account Created!', 'Welcome to BFPC! Your account has been created successfully.')
-        router.push("/dashboard")
+        showToast('success', 'Account Created!', 'Please check your email for verification code.')
+        // Redirect to verification page with email
+        router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
       } else {
         showToast('error', 'Signup Failed', result.error || 'Something went wrong. Please try again.')
       }

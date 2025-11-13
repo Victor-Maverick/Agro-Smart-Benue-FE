@@ -155,14 +155,31 @@ export default function Login() {
               <span>{loading ? "Signing In..." : "Sign In"}</span>
             </Button>
 
-            {/* Signup Link */}
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
-                Don't have an account?{" "}
-                <Link href="/signup" className="text-green-600 hover:text-green-700 font-semibold">
-                  Create one here
+            {/* Additional Links */}
+            <div className="space-y-3">
+              <div className="text-center">
+                <Link href="/forgot-password" className="text-sm text-green-600 hover:text-green-700 font-medium">
+                  Forgot Password?
                 </Link>
-              </p>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  Email not verified?{" "}
+                  <Link href="/verify-email" className="text-green-600 hover:text-green-700 font-semibold">
+                    Verify Now
+                  </Link>
+                </p>
+              </div>
+
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  Don't have an account?{" "}
+                  <Link href="/signup" className="text-green-600 hover:text-green-700 font-semibold">
+                    Create one here
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
         </div>
