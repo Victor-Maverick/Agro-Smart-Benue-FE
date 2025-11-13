@@ -192,13 +192,32 @@ export default function VerifyEmailPage() {
                       placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !sendingOtp) {
+                          handleSendVerificationOTP()
+                        }
+                      }}
                       className="border-[#022B23]/30 focus:border-[#022B23]"
                     />
                   </div>
 
+                  {/* Error Message */}
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Success Message */}
+                  {success && (
+                    <div className="bg-[#022B23]/5 border border-[#022B23]/20 text-[#022B23] px-4 py-3 rounded">
+                      {success}
+                    </div>
+                  )}
+
                   <Button
                     onClick={handleSendVerificationOTP}
-                    disabled={sendingOtp}
+                    disabled={sendingOtp || !email}
                     className="w-full h-[58px] bg-[#022B23] hover:bg-[#034A3A] text-white font-semibold rounded-[14px]"
                   >
                     {sendingOtp ? (
@@ -234,6 +253,19 @@ export default function VerifyEmailPage() {
                           className="w-12 h-12 text-center text-xl font-semibold border-[#022B23]/30 focus:border-[#022B23]"
                         />
                       ))}
+                    </div>
+                    <div className="text-center mt-3">
+                      <button
+                        onClick={() => {
+                          setShowEmailInput(true)
+                          setOtp(["", "", "", "", "", ""])
+                          setError("")
+                          setSuccess("")
+                        }}
+                        className="text-sm text-gray-600 hover:text-[#022B23]"
+                      >
+                        Change email address
+                      </button>
                     </div>
                   </div>
 
