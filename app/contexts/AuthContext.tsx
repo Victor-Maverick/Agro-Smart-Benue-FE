@@ -24,7 +24,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (email: string, password: string, captchaToken?: string) => Promise<{ success: boolean; error?: string }>
+  login: (email: string, password: string, captchaToken?: string) => Promise<{ success: boolean; error?: string; needsVerification?: boolean; email?: string }>
   signup: (userData: any) => Promise<{ success: boolean; error?: string }>
   logout: () => void
   googleLogin: () => Promise<boolean>
@@ -108,6 +108,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const errorMessage = error.response?.data?.message || 
                           error.response?.data?.error || 
                           'An error occurred during login'
+      
+      // Check if error is due to unverified account
+      if (errorMessage.toLowerCase().includes('not verified') || 
+          errorMessage.toLowerCase().includes('verify your account') ||
+          error.response?.data?.error === 'AccountNotVerified') {
+        return { success: false, error: errorMessage, needsVerification: true, email }
+      }
       
       return { success: false, error: errorMessage }
     }

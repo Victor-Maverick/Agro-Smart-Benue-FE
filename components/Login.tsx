@@ -69,6 +69,9 @@ export default function Login() {
       if (result.success) {
         showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
         router.push("/dashboard")
+      } else if ((result as any).needsVerification) {
+        showToast('error', 'Email Not Verified', 'Please verify your email to continue.')
+        router.push(`/verify-email?email=${encodeURIComponent((result as any).email)}`)
       } else {
         showToast('error', 'Login Failed', result.error || 'Invalid email or password. Please try again.')
       }
