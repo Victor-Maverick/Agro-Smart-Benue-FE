@@ -24,7 +24,7 @@ export default function SlidingMarketPrices() {
 
   const fetchPrices = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/market-prices/recent`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/market-prices/recent`)
       if (response.ok) {
         const data = await response.json()
         setPrices(data.data || [])

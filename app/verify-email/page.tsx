@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Loader2, Mail, ArrowLeft } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import axios from "axios"
 
 export default function VerifyEmailPage() {
   const router = useRouter()
@@ -35,22 +36,16 @@ export default function VerifyEmailPage() {
     setError("")
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/send-verification-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok && data.data?.success) {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/send-verification-otp`, { email })
+      
+      if (response.data?.data?.success) {
         setSuccess("Verification code sent to your email!")
         setShowEmailInput(false)
       } else {
-        setError(data.data?.message || "Failed to send verification code")
+        setError(response.data?.data?.message || "Failed to send verification code")
       }
-    } catch (error) {
-      setError("Failed to send verification code. Please try again.")
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to send verification code. Please try again.")
     } finally {
       setSendingOtp(false)
     }
@@ -109,22 +104,16 @@ export default function VerifyEmailPage() {
     setError("")
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: otpCode }),
-      })
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/verify-otp`, { email, otp: otpCode })
 
-      const data = await response.json()
-
-      if (response.ok && data.data?.success) {
+      if (response.data?.data?.success) {
         setSuccess("Email verified successfully! Redirecting to login...")
         setTimeout(() => router.push("/login"), 2000)
       } else {
-        setError(data.data?.message || "Invalid OTP. Please try again.")
+        setError(response.data?.data?.message || "Invalid OTP. Please try again.")
       }
-    } catch (error) {
-      setError("Verification failed. Please try again.")
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Verification failed. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -136,23 +125,17 @@ export default function VerifyEmailPage() {
     setSuccess("")
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/resend-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/resend-otp`, { email })
 
-      const data = await response.json()
-
-      if (response.ok && data.data?.success) {
+      if (response.data?.data?.success) {
         setSuccess("OTP sent successfully! Check your email.")
         setOtp(["", "", "", "", "", ""])
         inputRefs.current[0]?.focus()
       } else {
-        setError(data.data?.message || "Failed to resend OTP")
+        setError(response.data?.data?.message || "Failed to resend OTP")
       }
-    } catch (error) {
-      setError("Failed to resend OTP. Please try again.")
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to resend OTP. Please try again.")
     } finally {
       setResending(false)
     }

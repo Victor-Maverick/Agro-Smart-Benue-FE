@@ -9,86 +9,39 @@ import { MapPin, TrendingUp, Package, ShoppingCart, ArrowRight, Star } from "luc
 import Link from "next/link"
 import Image from "next/image"
 import SlidingMarketPrices from "@/components/SlidingMarketPrices"
+import Header from "@/components/Header"
+import axios from "axios"
 
 interface Product {
   id: number
   name: string
   description: string
-  price: number
-  unit: string
+  unitPrice: number
   quantity: number
+  quantityCategory: string
   location: string
   imageUrl: string
-  farmer: {
-    name: string
-    rating: number
-  }
-  category: string
+  farmerName?: string
+  phone?: string
+  available: boolean
+  createdAt: string
 }
 
 interface ProductDemand {
   id: number
   productName: string
+  description?: string
+  offerPrice: number
   quantity: number
-  unit: string
-  maxPrice: number
+  quantityCategory: string
   location: string
-  buyer: {
-    name: string
-    contact: string
-  }
-  deadline: string
+  phoneContact?: string
+  phone?: string
+  buyerName?: string
+  createdAt: string
 }
 
-const dummyProducts: Product[] = [
-  {
-    id: 1,
-    name: "Premium Rice",
-    description: "High-quality locally grown rice from Makurdi farms",
-    price: 45000,
-    unit: "bag (50kg)",
-    quantity: 100,
-    location: "Makurdi, Benue",
-    imageUrl: "https://res.cloudinary.com/dgswwi2ye/image/upload/v1730965630/rice_sample.jpg",
-    farmer: { name: "Emmanuel Terkimbi", rating: 4.8 },
-    category: "Grains"
-  },
-  {
-    id: 2,
-    name: "Fresh Yam Tubers",
-    description: "Freshly harvested yam tubers, perfect for consumption",
-    price: 2500,
-    unit: "tuber",
-    quantity: 500,
-    location: "Gboko, Benue",
-    imageUrl: "https://res.cloudinary.com/dgswwi2ye/image/upload/v1730965630/yam_sample.jpg",
-    farmer: { name: "Mary Ochoga", rating: 4.9 },
-    category: "Tubers"
-  }
-]
 
-const dummyDemands: ProductDemand[] = [
-  {
-    id: 1,
-    productName: "Cassava",
-    quantity: 200,
-    unit: "bags",
-    maxPrice: 15000,
-    location: "Otukpo, Benue",
-    buyer: { name: "John Agbo", contact: "+234 803 XXX XXXX" },
-    deadline: "2025-11-15"
-  },
-  {
-    id: 2,
-    productName: "Soybeans",
-    quantity: 50,
-    unit: "bags",
-    maxPrice: 54000,
-    location: "Katsina-Ala, Benue",
-    buyer: { name: "Grace Iortyom", contact: "+234 805 XXX XXXX" },
-    deadline: "2025-11-20"
-  }
-]
 
 export default function MarketPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -103,34 +56,21 @@ export default function MarketPage() {
   const fetchMarketData = async () => {
     try {
       setLoading(true)
-      const productsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products`)
-      if (productsRes.ok) {
-        const data = await productsRes.json()
-        const fetchedProducts = data.data || []
-        setProducts(fetchedProducts.length > 0 ? fetchedProducts : dummyProducts)
-        if (fetchedProducts.length > 0) {
-          setTopPerformer(fetchedProducts[0])
-        } else {
-          setTopPerformer(dummyProducts[0])
-        }
-      } else {
-        setProducts(dummyProducts)
-        setTopPerformer(dummyProducts[0])
-      }
+      const productsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/all`)
+      console.log("Products", productsRes.data)
+      const fetchedProducts = productsRes.data
+      setProducts(fetchedProducts)
+      setTopPerformer(fetchedProducts[0] || null)
 
-      const demandsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/product-demands`)
-      if (demandsRes.ok) {
-        const data = await demandsRes.json()
-        const fetchedDemands = data.data || []
-        setDemands(fetchedDemands.length > 0 ? fetchedDemands : dummyDemands)
-      } else {
-        setDemands(dummyDemands)
-      }
+      const demandsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demands`)
+      const fetchedDemands = demandsRes.data?.data || []
+      console.log("Demands: ", fetchedDemands)
+      setDemands(fetchedDemands)
     } catch (error) {
       console.error("Failed to fetch market data:", error)
-      setProducts(dummyProducts)
-      setDemands(dummyDemands)
-      setTopPerformer(dummyProducts[0])
+      setProducts([])
+      setDemands([])
+      setTopPerformer(null)
     } finally {
       setLoading(false)
     }
@@ -144,44 +84,12 @@ export default function MarketPage() {
     }).format(price)
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <nav className="bg-white border-b border-green-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-[80px]">
-            <div className="flex items-center space-x-2">
-              <Link href="/" className="flex items-center space-x-2 text-green-800 hover:text-green-900 transition-colors">
-                <Image src="/images/header image.png" alt="BFPC Logo" width={64} height={64} />
-                <p className="font-bold leading-tight">Benue <span className="text-orange-600">Farmers</span> <br />Peace Corps</p>
-              </Link>
-            </div>
-            <div className="hidden md:flex space-x-8">
-              <Link href="/#features" className="text-green-700 hover:text-green-900 transition-colors">Features</Link>
-              <Link href="/market" className="text-green-700 hover:text-green-900 font-semibold transition-colors">Market</Link>
-              <Link href="/market-prices" className="text-green-700 hover:text-green-900 transition-colors">Market Prices</Link>
-              <Link href="/#about" className="text-green-700 hover:text-green-900 transition-colors">About</Link>
-              <Link href="/login" className="text-green-700 hover:text-green-900 transition-colors">Login</Link>
-            </div>
-            <div className="flex space-x-4">
-              <Link href="/login">
-                <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">Login</Button>
-              </Link>
-              <Link href="/signup">
-                <Button className="bg-green-600 hover:bg-green-700 text-white">Get Started</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -227,14 +135,19 @@ export default function MarketPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm text-gray-600">{topPerformer.quantity} {topPerformer.unit} available</span>
+                        <span className="text-sm text-gray-600">{topPerformer.quantity} {topPerformer.quantityCategory} available</span>
                       </div>
+                      {topPerformer.farmerName && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">Farmer: {topPerformer.farmerName}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-4">
                     <div>
-                      <p className="text-3xl font-bold text-green-600">{formatPrice(topPerformer.price)}</p>
-                      <p className="text-sm text-gray-500">per {topPerformer.unit}</p>
+                      <p className="text-3xl font-bold text-green-600">{formatPrice(topPerformer.unitPrice)}</p>
+                      <p className="text-sm text-gray-500">per {topPerformer.quantityCategory}</p>
                     </div>
                     <Link href={`/market/${topPerformer.id}`}>
                       <Button className="bg-green-600 hover:bg-green-700">
@@ -256,8 +169,20 @@ export default function MarketPage() {
           </TabsList>
 
           <TabsContent value="products" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading products...</p>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-8">
+                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-xl text-gray-600">No products available</p>
+                <p className="text-gray-500">Check back later for new products</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((product) => (
                 <Card key={product.id} className="hover:shadow-lg transition-shadow">
                   <div className="relative h-48 w-full">
                     <Image
@@ -266,7 +191,7 @@ export default function MarketPage() {
                       fill
                       className="object-cover rounded-t-lg"
                     />
-                    <Badge className="absolute top-2 right-2 bg-green-600">{product.category}</Badge>
+                    <Badge className="absolute top-2 right-2 bg-green-600">{product.quantityCategory}</Badge>
                   </div>
                   <CardHeader>
                     <CardTitle className="text-xl">{product.name}</CardTitle>
@@ -280,8 +205,8 @@ export default function MarketPage() {
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-2xl font-bold text-green-600">{formatPrice(product.price)}</p>
-                          <p className="text-xs text-gray-500">per {product.unit}</p>
+                          <p className="text-2xl font-bold text-green-600">{formatPrice(product.unitPrice)}</p>
+                          <p className="text-xs text-gray-500">per {product.quantityCategory}</p>
                         </div>
                         <Link href={`/market/${product.id}`}>
                           <Button size="sm" className="bg-green-600 hover:bg-green-700">
@@ -289,23 +214,34 @@ export default function MarketPage() {
                           </Button>
                         </Link>
                       </div>
-                      <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t">
-                        <span>{product.farmer.name}</span>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                          <span>{product.farmer.rating}</span>
+                      {product.farmerName && (
+                        <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t">
+                          <span>Farmer: {product.farmerName}</span>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="demands" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {demands.map((demand) => (
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading demands...</p>
+              </div>
+            ) : demands.length === 0 ? (
+              <div className="text-center py-8">
+                <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-xl text-gray-600">No demands available</p>
+                <p className="text-gray-500">Check back later for new demands</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {demands.map((demand) => (
                 <Card key={demand.id} className="border-orange-200">
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -321,29 +257,33 @@ export default function MarketPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-gray-600">Quantity Needed</p>
-                          <p className="text-lg font-semibold">{demand.quantity} {demand.unit}</p>
+                          <p className="text-lg font-semibold">{demand.quantity} {demand.quantityCategory}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Max Price</p>
-                          <p className="text-lg font-semibold text-green-600">{formatPrice(demand.maxPrice)}</p>
+                          <p className="text-sm text-gray-600">Offer Price</p>
+                          <p className="text-lg font-semibold text-green-600">{formatPrice(demand.offerPrice)}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-600">{demand.location}</span>
                       </div>
-                      <div className="pt-3 border-t">
-                        <p className="text-sm text-gray-600">Buyer: {demand.buyer.name}</p>
-                        <p className="text-sm text-gray-600">Deadline: {formatDate(demand.deadline)}</p>
-                      </div>
-                      <Button className="w-full bg-orange-600 hover:bg-orange-700">
-                        Contact Buyer
-                      </Button>
+                      {demand.buyerName && (
+                        <div className="pt-3 border-t">
+                          <p className="text-sm text-gray-600">Buyer: {demand.buyerName}</p>
+                        </div>
+                      )}
+                      <Link href={`/market/demand/${demand.id}`}>
+                        <Button className="w-full bg-orange-600 hover:bg-orange-700">
+                          View Details
+                        </Button>
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

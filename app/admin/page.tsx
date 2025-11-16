@@ -9,6 +9,7 @@ import AdminMarketPriceManager from "@/components/AdminMarketPriceManager"
 import AdminUserManager from "@/components/AdminUserManager"
 import AdminCropManager from "@/components/AdminCropManager"
 import AdminProductsDemandsManager from "@/components/AdminProductsDemandsManager"
+import AdminCropTipManager from "@/components/AdminCropTipManager"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#14b8a6']
@@ -19,6 +20,7 @@ const sidebarItems = [
   { id: "prices", label: "Market Prices", icon: <DollarSign className="h-5 w-5" /> },
   { id: "products", label: "Products & Demands", icon: <Package className="h-5 w-5" /> },
   { id: "crops", label: "Crops", icon: <Sprout className="h-5 w-5" /> },
+  { id: "crop-tips", label: "Crop Tips", icon: <Sprout className="h-5 w-5" /> },
   { id: "users", label: "Users", icon: <Users className="h-5 w-5" /> },
 ]
 
@@ -274,6 +276,7 @@ export default function AdminDashboard() {
           {activeTab === "prices" && <AdminMarketPriceManager />}
           {activeTab === "products" && <AdminProductsDemandsManager />}
           {activeTab === "crops" && <AdminCropManager />}
+          {activeTab === "crop-tips" && <AdminCropTipManager />}
           {activeTab === "users" && <AdminUserManager />}
           </div>
         </div>

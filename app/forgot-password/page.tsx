@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Loader2, KeyRound, ArrowLeft, Eye, EyeOff } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import axios from "axios"
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -34,22 +35,16 @@ export default function ForgotPasswordPage() {
     setError("")
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/forgot-password`, { email })
 
-      const data = await response.json()
-
-      if (response.ok && data.data?.success) {
+      if (response.data?.data?.success) {
         setSuccess("Password reset code sent to your email!")
         setStep("otp")
       } else {
-        setError(data.data?.message || "Failed to send reset code")
+        setError(response.data?.data?.message || "Failed to send reset code")
       }
-    } catch (error) {
-      setError("Failed to send reset code. Please try again.")
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to send reset code. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -85,22 +80,16 @@ export default function ForgotPasswordPage() {
     setError("")
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/verify-password-reset-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: otpCode }),
-      })
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/verify-password-reset-otp`, { email, otp: otpCode })
 
-      const data = await response.json()
-
-      if (response.ok && data.data?.success) {
+      if (response.data?.data?.success) {
         setSuccess("OTP verified! Please enter your new password.")
         setStep("password")
       } else {
-        setError(data.data?.message || "Invalid OTP. Please try again.")
+        setError(response.data?.data?.message || "Invalid OTP. Please try again.")
       }
-    } catch (error) {
-      setError("Verification failed. Please try again.")
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Verification failed. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -126,26 +115,20 @@ export default function ForgotPasswordPage() {
     setError("")
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/reset-password-with-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email, 
-          otp: otp.join(""), 
-          newPassword 
-        }),
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/reset-password-with-otp`, { 
+        email, 
+        otp: otp.join(""), 
+        newPassword 
       })
 
-      const data = await response.json()
-
-      if (response.ok && data.data?.success) {
+      if (response.data?.data?.success) {
         setSuccess("Password reset successfully! Redirecting to login...")
         setTimeout(() => router.push("/login"), 2000)
       } else {
-        setError(data.data?.message || "Failed to reset password")
+        setError(response.data?.data?.message || "Failed to reset password")
       }
-    } catch (error) {
-      setError("Failed to reset password. Please try again.")
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to reset password. Please try again.")
     } finally {
       setLoading(false)
     }

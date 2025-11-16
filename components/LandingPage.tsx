@@ -19,6 +19,8 @@ import Link from "next/link"
 import Image from "next/image"
 import EnhancedEventsHero from "./EnhancedEventsHero"
 import WeatherForecast from "./WeatherForecast"
+import ReviewSection from "./ReviewSection"
+import Header from "./Header"
 
 // Updated hero section with organic shapes - v2.0
 export default function BFPCLanding() {
@@ -77,42 +79,7 @@ export default function BFPCLanding() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="bg-white border-b border-green-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-[80px]">
-            <div className="flex items-center space-x-2">
-              <a href="#hero"
-                className="flex items-center space-x-2 text-green-800 hover:text-green-900 transition-colors">
-                <Image src="/images/header image.png" alt="BFPC Logo" width={64} height={64} />
-                <p className="font-bold leading-tight">Benue <span className="text-orange-600">Farmers</span> <br />Peace Corps</p>
-              </a>
-            </div>
-            <div className="hidden md:flex space-x-8">
-              <a href="#features" className="text-green-700 hover:text-green-900 transition-colors">
-                Features
-              </a>
-              <Link href="/market" className="text-green-700 hover:text-green-900 transition-colors">
-                Market
-              </Link>
-              <Link href="/market-prices" className="text-green-700 hover:text-green-900 transition-colors">
-                Market Prices
-              </Link>
-              <a href="#about" className="text-green-700 hover:text-green-900 transition-colors">
-                About
-              </a>
-              <a href="#partnerships" className="text-green-700 hover:text-green-900 transition-colors">
-                Partners
-              </a>
-              <a href="#contact" className="text-green-700 hover:text-green-900 transition-colors">
-                Contact
-              </a>
-            </div>
-            <Link href="/login">
-              <Button className="bg-green-600 hover:bg-green-700 text-white">Get Started</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* Hero Section with Organic Shapes */}
       <section
@@ -495,6 +462,9 @@ export default function BFPCLanding() {
           </div>
         </div>
       </section>
+
+      {/* Review Section */}
+      <ReviewSection />
 
       {/* Footer */}
       <footer id="contact" className="bg-[#001E18] text-white pt-20 pb-6">

@@ -4,14 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, MapPin } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-
-interface Crop {
-  id: number
-  name: string
-  category: string
-}
+import { Loader2, MapPin, TrendingUp } from "lucide-react"
 
 interface MarketPrice {
   id: number
@@ -28,48 +21,41 @@ interface MarketPrice {
   quality: string
 }
 
-export default function CropPricesByMarket() {
-  const [crops, setCrops] = useState<Crop[]>([])
-  const [selectedCrop, setSelectedCrop] = useState<string>("")
+export default function MarketPricesByMarket() {
+  const [markets, setMarkets] = useState<string[]>([])
+  const [selectedMarket, setSelectedMarket] = useState<string>("")
   const [marketPrices, setMarketPrices] = useState<MarketPrice[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
 
-  const { toast } = useToast()
-
   useEffect(() => {
-    fetchCrops()
+    fetchMarkets()
   }, [])
 
   useEffect(() => {
-    if (selectedCrop) {
-      fetchMarketPrices(selectedCrop)
+    if (selectedMarket) {
+      fetchMarketPrices(selectedMarket)
     }
-  }, [selectedCrop])
+  }, [selectedMarket])
 
-  const fetchCrops = async () => {
+  const fetchMarkets = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/crops/all`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/market-prices/markets`)
       if (response.ok) {
         const data = await response.json()
-        setCrops(data.data || [])
+        setMarkets(data.data || [])
       }
     } catch (error) {
-      console.error("Failed to fetch crops:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load crops. Please try again.",
-        variant: "destructive",
-      })
+      console.error("Failed to fetch markets:", error)
     } finally {
       setInitialLoading(false)
     }
   }
 
-  const fetchMarketPrices = async (cropId: string) => {
+  const fetchMarketPrices = async (market: string) => {
     setLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/market-prices/crop/${cropId}/by-market`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/market-prices/market/${encodeURIComponent(market)}`)
       
       if (response.ok) {
         const data = await response.json()
@@ -77,11 +63,6 @@ export default function CropPricesByMarket() {
       }
     } catch (error) {
       console.error("Failed to fetch market prices:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load market prices. Please try again.",
-        variant: "destructive",
-      })
     } finally {
       setLoading(false)
     }
@@ -120,7 +101,7 @@ export default function CropPricesByMarket() {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-        <span className="ml-2">Loading crops...</span>
+        <span className="ml-2">Loading markets...</span>
       </div>
     )
   }
@@ -128,26 +109,26 @@ export default function CropPricesByMarket() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Crop Prices by Market</h2>
-        <p className="text-gray-600">Compare prices for the same crop across different markets and locations</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Prices by Market Location</h2>
+        <p className="text-gray-600">Browse all crop prices for a specific market location</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Select Crop</CardTitle>
+          <CardTitle>Select Market</CardTitle>
           <CardDescription>
-            Choose a crop to view its prices across different markets in Benue State
+            Choose a market to view all crop prices available at that location
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Select value={selectedCrop} onValueChange={setSelectedCrop}>
+          <Select value={selectedMarket} onValueChange={setSelectedMarket}>
             <SelectTrigger className="w-full md:w-1/2">
-              <SelectValue placeholder="Select a crop to view prices" />
+              <SelectValue placeholder="Select a market to view prices" />
             </SelectTrigger>
             <SelectContent>
-              {crops.map((crop) => (
-                <SelectItem key={crop.id} value={crop.id.toString()}>
-                  {crop.name}
+              {markets.map((market) => (
+                <SelectItem key={market} value={market}>
+                  {market}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -155,8 +136,13 @@ export default function CropPricesByMarket() {
         </CardContent>
       </Card>
 
-      {selectedCrop && (
+      {selectedMarket && (
         <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-green-600" />
+            <h3 className="text-xl font-semibold">Prices at {selectedMarket}</h3>
+          </div>
+          
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-green-600" />
@@ -169,9 +155,9 @@ export default function CropPricesByMarket() {
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle className="text-lg">{price.market}</CardTitle>
+                        <CardTitle className="text-lg">{price.crop.name}</CardTitle>
                         <CardDescription className="flex items-center gap-1 mt-1">
-                          <MapPin className="h-3 w-3" />
+                          <TrendingUp className="h-3 w-3" />
                           {price.lga}, {price.state}
                         </CardDescription>
                       </div>
@@ -204,7 +190,7 @@ export default function CropPricesByMarket() {
                 <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No Prices Available</h3>
                 <p className="text-gray-600">
-                  No market prices found for the selected crop. Prices will appear here once they are added by administrators.
+                  No prices found for {selectedMarket}. Prices will appear here once they are added by administrators.
                 </p>
               </CardContent>
             </Card>

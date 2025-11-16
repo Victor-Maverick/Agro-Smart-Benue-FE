@@ -3,11 +3,11 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Leaf, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import Header from "@/components/Header"
 import CropPricesByMarket from "@/components/CropPricesByMarket"
 import SlidingMarketPrices from "@/components/SlidingMarketPrices"
+import MarketPriceStats from "@/components/MarketPriceStats"
+import MarketPricesByMarket from "@/components/MarketPricesByMarket"
 
 export default function MarketPricesPage() {
   const [activeTab, setActiveTab] = useState("overview")
@@ -15,24 +15,7 @@ export default function MarketPricesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Home
-                </Button>
-              </Link>
-              <div className="flex items-center space-x-2">
-                <Leaf className="h-6 w-6 text-green-600" />
-                <h1 className="text-xl font-semibold text-gray-900">Market Prices</h1>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -62,23 +45,7 @@ export default function MarketPricesPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-green-50 p-4 rounded-lg">
-                          <h3 className="font-semibold text-green-900">Total Markets</h3>
-                          <p className="text-2xl font-bold text-green-600">8</p>
-                          <p className="text-sm text-green-700">Active markets</p>
-                        </div>
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                          <h3 className="font-semibold text-blue-900">Tracked Crops</h3>
-                          <p className="text-2xl font-bold text-blue-600">15</p>
-                          <p className="text-sm text-blue-700">Different crops</p>
-                        </div>
-                        <div className="bg-orange-50 p-4 rounded-lg">
-                          <h3 className="font-semibold text-orange-900">Price Updates</h3>
-                          <p className="text-2xl font-bold text-orange-600">Daily</p>
-                          <p className="text-sm text-orange-700">Fresh data</p>
-                        </div>
-                      </div>
+                      <MarketPriceStats />
                       
                       <div className="mt-6">
                         <h4 className="font-semibold text-gray-900 mb-3">Featured Markets</h4>
@@ -121,22 +88,7 @@ export default function MarketPricesPage() {
           </TabsContent>
 
           <TabsContent value="by-market">
-            <Card>
-              <CardHeader>
-                <CardTitle>Prices by Market Location</CardTitle>
-                <CardDescription>
-                  Browse crop prices organized by market and location
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <p className="text-gray-600 mb-4">Market-based price view coming soon...</p>
-                  <p className="text-sm text-gray-500">
-                    This feature will allow you to browse all crop prices for a specific market location.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <MarketPricesByMarket />
           </TabsContent>
         </Tabs>
       </div>
