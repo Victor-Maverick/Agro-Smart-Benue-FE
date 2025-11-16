@@ -47,6 +47,16 @@ jobs:
             echo "Stopping old frontend container if exists..."
             docker stop agrosmart-frontend || true
             docker rm agrosmart-frontend || true
-            echo "Starting new frontend container..."
-            docker run -d --name agrosmart-frontend -p 3000:3000 ${{ secrets.DOCKERHUB_USERNAME }}/agrosmart-frontend:latest
+            echo "Starting new frontend container with environment variables..."
+            docker run -d --name agrosmart-frontend \
+              -p 3000:3000 \
+              -e NODE_ENV=production \
+              -e NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
+              -e NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
+              -e NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
+              -e NEXT_PUBLIC_API_BASE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" \
+              -e NEXT_PUBLIC_RECAPTCHA_SITE_KEY="${{ secrets.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}" \
+              -e RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}" \
+              -e NEXT_PUBLIC_WEATHER_API_KEY="${{ secrets.NEXT_PUBLIC_WEATHER_API_KEY }}" \
+              ${{ secrets.DOCKERHUB_USERNAME }}/agrosmart-frontend:latest
             echo "✅ Frontend deployed successfully!"
