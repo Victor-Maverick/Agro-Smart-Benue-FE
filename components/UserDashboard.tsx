@@ -32,7 +32,7 @@ import {
     Loader2,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useSession, signOut } from "next-auth/react"
+import { useAuth } from "@/app/contexts/AuthContext"
 import CollapsibleSidebar from "@/components/CollapsibleSidebar"
 import UserProductManager from "@/components/UserProductManager"
 import Link from "next/link"
@@ -48,7 +48,7 @@ const sidebarItems = [
 ]
 
 export default function UserDashboard() {
-    const { data: session } = useSession()
+    const { user, logout } = useAuth()
     const router = useRouter()
     const [activeTab, setActiveTab] = useState("overview")
     const [notifications, setNotifications] = useState(3)
@@ -83,7 +83,8 @@ export default function UserDashboard() {
     }
 
     const handleLogout = () => {
-        signOut({ callbackUrl: "/" })
+        logout()
+        router.push("/")
     }
 
     const cropData = [
@@ -122,7 +123,7 @@ export default function UserDashboard() {
                     <div className="px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between items-center h-16">
                             <div>
-                                <h1 className="text-xl font-bold text-gray-900">Welcome back, {session?.user?.firstName} {session?.user?.lastName}</h1>
+                                <h1 className="text-xl font-bold text-gray-900">Welcome back, {user?.name}</h1>
                             </div>
 
                             <div className="flex items-center space-x-4">
@@ -143,16 +144,16 @@ export default function UserDashboard() {
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                                             <Avatar className="h-8 w-8">
-                                                <AvatarImage src={session?.user?.mediaUrl || "/placeholder.svg?height=32&width=32"} alt={`${session?.user?.firstName} ${session?.user?.lastName}`} />
-                                                <AvatarFallback>{session?.user?.firstName?.charAt(0)}</AvatarFallback>
+                                                <AvatarImage src={user?.mediaUrl || "/placeholder.svg?height=32&width=32"} alt={user?.name || ""} />
+                                                <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-56" align="end" forceMount>
                                         <DropdownMenuLabel className="font-normal">
                                             <div className="flex flex-col space-y-1">
-                                                <p className="text-sm font-medium leading-none">{session?.user?.firstName} {session?.user?.lastName}</p>
-                                                <p className="text-xs leading-none text-muted-foreground">{session?.user?.email}</p>
+                                                <p className="text-sm font-medium leading-none">{user?.name}</p>
+                                                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                                             </div>
                                         </DropdownMenuLabel>
                                         <DropdownMenuSeparator />
@@ -240,7 +241,7 @@ export default function UserDashboard() {
                                             <Leaf className="h-4 w-4 text-muted-foreground" />
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="text-2xl font-bold">3</div>
+                                            <div className="text-2xl font-bold">{user?.farmDetails?.crops?.length || 0}</div>
                                             <p className="text-xs text-muted-foreground">Different crop varieties</p>
                                         </CardContent>
                                     </Card>
@@ -251,7 +252,7 @@ export default function UserDashboard() {
                                             <MapPin className="h-4 w-4 text-muted-foreground" />
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="text-2xl font-bold">Benue State</div>
+                                            <div className="text-2xl font-bold">{user?.farmDetails?.location || "Benue State"}</div>
                                             <p className="text-xs text-muted-foreground">Your farming location</p>
                                         </CardContent>
                                     </Card>

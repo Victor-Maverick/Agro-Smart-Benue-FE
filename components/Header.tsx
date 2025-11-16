@@ -1,18 +1,21 @@
 "use client"
 
 import { useState } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { useAuth } from '@/app/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, User, LogOut, BarChart3, ChevronDown } from 'lucide-react'
 
 export default function Header() {
-  const { data: session } = useSession()
+  const { user, logout } = useAuth()
+  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: '/' })
+    logout()
+    router.push('/')
   }
 
   return (
@@ -43,15 +46,15 @@ export default function Header() {
             </Link>
 
             {/* Authentication Section */}
-            {session ? (
+            {user ? (
               <div className="relative">
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center space-x-2 text-green-700 hover:text-green-900 transition-colors"
                 >
-                  {session.user?.mediaUrl ? (
+                  {user?.mediaUrl ? (
                     <img
-                      src={session.user.mediaUrl}
+                      src={user.mediaUrl}
                       alt="Profile"
                       className="w-8 h-8 rounded-full object-cover"
                     />
@@ -155,12 +158,12 @@ export default function Header() {
               </Link>
 
               {/* Mobile Authentication Section */}
-              {session ? (
+              {user ? (
                 <div className="border-t border-green-100 pt-3">
                   <div className="flex items-center px-3 py-2">
-                    {session.user?.mediaUrl ? (
+                    {user?.mediaUrl ? (
                       <img
-                        src={session.user.mediaUrl}
+                        src={user.mediaUrl}
                         alt="Profile"
                         className="w-8 h-8 rounded-full object-cover mr-3"
                       />
@@ -170,7 +173,7 @@ export default function Header() {
                       </div>
                     )}
                     <span className="text-sm font-medium text-gray-900">
-                      {session.user?.firstName} {session.user?.lastName}
+                      {user?.name}
                     </span>
                   </div>
                   <Link

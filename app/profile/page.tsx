@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '../contexts/AuthContext'
 import { User, Mail, Phone, MapPin, Calendar, Edit } from 'lucide-react'
+import Header from '@/components/Header'
 
 interface UserProfile {
   firstName: string
@@ -15,57 +16,27 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (session?.user?.email) {
-      fetchProfile()
-    }
-  }, [session])
-
-  const fetchProfile = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
-        headers: {
-          'Authorization': `Bearer ${session?.accessToken}`
-        }
+    if (user) {
+      // Use user data from AuthContext
+      setProfile({
+        firstName: user.name?.split(' ')[0] || '',
+        lastName: user.name?.split(' ')[1] || '',
+        email: user.email || '',
+        phone: user.phone,
+        mediaUrl: user.mediaUrl,
+        createdAt: new Date().toISOString(),
+        roles: user.roles || []
       })
-      
-      if (res.ok) {
-        const data = await res.json()
-        setProfile(data)
-      } else {
-        // If API call fails, use session data
-        if (session?.user) {
-          setProfile({
-            firstName: session.user.firstName || '',
-            lastName: session.user.lastName || '',
-            email: session.user.email || '',
-            mediaUrl: session.user.mediaUrl || undefined,
-            createdAt: new Date().toISOString(),
-            roles: session.user.roles || ['FARMER']
-          })
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error)
-      // Fallback to session data
-      if (session?.user) {
-        setProfile({
-          firstName: session.user.firstName || '',
-          lastName: session.user.lastName || '',
-          email: session.user.email || '',
-          mediaUrl: session.user.mediaUrl || undefined,
-          createdAt: new Date().toISOString(),
-          roles: session.user.roles || ['FARMER']
-        })
-      }
-    } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+
 
   if (loading) {
     return (

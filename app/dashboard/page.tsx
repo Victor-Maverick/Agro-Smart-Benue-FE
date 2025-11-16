@@ -1,23 +1,22 @@
 "use client"
 
 import { useEffect } from "react"
-import { useSession } from "next-auth/react"
+import { useAuth } from "../contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import UserDashboard from "@/components/UserDashboard"
 import Loading from "@/components/Loading"
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (status === "loading") return // Still loading
-    if (!session) {
+    if (!loading && !user) {
       router.push("/login")
     }
-  }, [session, status, router])
+  }, [user, loading, router])
 
-  if (status === "loading" || !session) {
+  if (loading || !user) {
     return <Loading />
   }
 

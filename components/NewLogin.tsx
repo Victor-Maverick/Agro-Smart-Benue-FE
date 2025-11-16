@@ -11,7 +11,6 @@ import { useAuth } from "../app/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/contexts/ToastContext"
 import { validateEmail, validateRequired } from "@/lib/validation"
-import { signIn } from "next-auth/react"
 import farmerImg from './../public/images/farmer image.png';
 
 export default function NewLogin() {
@@ -55,18 +54,15 @@ export default function NewLogin() {
 
     setLoading(true)
     try {
-      // Use NextAuth signIn with credentials
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      })
-
-      if (result?.ok) {
+      const result = await login(formData.email, formData.password)
+      if (result.success) {
         showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
         router.push("/dashboard")
+      } else if ((result as any).needsVerification) {
+        showToast('error', 'Email Not Verified', 'Please verify your email to continue.')
+        router.push(`/verify-email?email=${encodeURIComponent((result as any).email)}`)
       } else {
-        showToast('error', 'Login Failed', 'Invalid email or password. Please try again.')
+        showToast('error', 'Login Failed', result.error || 'Invalid email or password. Please try again.')
       }
     } catch (error) {
       showToast('error', 'Error', 'Something went wrong. Please try again.')
