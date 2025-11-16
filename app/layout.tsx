@@ -5,6 +5,7 @@ import "./globals.css"
 import { AuthProvider } from "./contexts/AuthContext"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ToastProvider } from "@/contexts/ToastContext"
+import SessionProvider from "@/components/SessionProvider"
 
 
 const inter = Inter({
@@ -87,13 +88,15 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
       <body className={`${inter.variable} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <ToastProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </ToastProvider>
-        </ThemeProvider>
+        <SessionProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+            <ToastProvider>
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        </SessionProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

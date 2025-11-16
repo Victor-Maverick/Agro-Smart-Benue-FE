@@ -12,14 +12,12 @@ interface User {
   email?: string
   phone?: string
   avatar?: string
-  mediaUrl?: string
-  roles?: string[]
-  farmDetails?: {
-    farmSize?: string
-    location?: string
-    crops?: string[]
-    experience?: string
-    soilType?: string
+  farmDetails: {
+    farmSize: string
+    location: string
+    crops: string[]
+    experience: string
+    soilType: string
   }
 }
 
