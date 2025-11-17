@@ -49,7 +49,7 @@ export default function CropPricesByMarket() {
 
   const fetchCrops = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/crops/all`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/crops/all`)
       if (response.ok) {
         const data = await response.json()
         setCrops(data.data || [])
@@ -69,7 +69,7 @@ export default function CropPricesByMarket() {
   const fetchMarketPrices = async (cropId: string) => {
     setLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/market-prices/crop/${cropId}/by-market`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/market-prices/crop/${cropId}/by-market`)
       
       if (response.ok) {
         const data = await response.json()

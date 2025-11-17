@@ -40,7 +40,7 @@ export default function MarketPricesByMarket() {
 
   const fetchMarkets = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/market-prices/markets`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/market-prices/markets`)
       if (response.ok) {
         const data = await response.json()
         setMarkets(data.data || [])
@@ -55,7 +55,7 @@ export default function MarketPricesByMarket() {
   const fetchMarketPrices = async (market: string) => {
     setLoading(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/market-prices/market/${encodeURIComponent(market)}`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/market-prices/market/${encodeURIComponent(market)}`)
       
       if (response.ok) {
         const data = await response.json()

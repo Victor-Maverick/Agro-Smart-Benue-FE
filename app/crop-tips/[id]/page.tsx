@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader2, Leaf } from "lucide-react"
+import { Loader2, ArrowLeft } from "lucide-react"
 import Link from 'next/link'
 import Header from "@/components/Header"
 
@@ -16,24 +16,27 @@ interface CropTip {
   createdAt: string
 }
 
-export default function CropTipsPage() {
+export default function CropTipDetailPage() {
   const router = useRouter()
-  const [cropTips, setCropTips] = useState<CropTip[]>([])
+  const params = useParams()
+  const [cropTip, setCropTip] = useState<CropTip | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchCropTips()
-  }, [])
+    if (params.id) {
+      fetchCropTip(params.id as string)
+    }
+  }, [params.id])
 
-  const fetchCropTips = async () => {
+  const fetchCropTip = async (id: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/crop-tips/all`)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/crop-tips/${id}`)
       const data = await res.json()
       if (data.status === true) {
-        setCropTips(data.data || [])
+        setCropTip(data.data)
       }
     } catch (error) {
-      console.error('Error fetching crop tips:', error)
+      console.error('Error fetching crop tip:', error)
     } finally {
       setLoading(false)
     }
@@ -51,7 +54,25 @@ export default function CropTipsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-        <span className="ml-2">Loading crop tips...</span>
+        <span className="ml-2">Loading...</span>
+      </div>
+    )
+  }
+
+  if (!cropTip) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <Card>
+            <CardContent className="p-12 text-center">
+              <h3 className="text-xl font-semibold mb-2">Crop Tip Not Found</h3>
+              <Button onClick={() => router.push('/crop-tips')}>
+                View All Tips
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
@@ -63,50 +84,42 @@ export default function CropTipsPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Farming Tips</h1>
-          <p className="text-lg text-gray-600">Expert advice and best practices for successful farming</p>
-        </div>
+        <Button
+          variant="ghost"
+          onClick={() => router.push('/crop-tips')}
+          className="mb-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to All Tips
+        </Button>
 
-        {cropTips.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cropTips.map((tip) => (
-              <Card 
-                key={tip.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => router.push(`/crop-tips/${tip.id}`)}
-              >
-                {tip.imageUrls && tip.imageUrls.length > 0 && (
-                  <div className="relative h-48 w-full">
+        <Card>
+          <CardContent className="p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{cropTip.title}</h1>
+            <p className="text-sm text-gray-500 mb-6">Published on {formatDate(cropTip.createdAt)}</p>
+            
+            {cropTip.imageUrls && cropTip.imageUrls.length > 0 && (
+              <div className="mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {cropTip.imageUrls.map((url, idx) => (
                     <img
-                      src={tip.imageUrls[0]}
-                      alt={tip.title}
-                      className="w-full h-full object-cover rounded-t-lg"
+                      key={idx}
+                      src={url}
+                      alt={`${cropTip.title} - Image ${idx + 1}`}
+                      className="w-full h-64 object-cover rounded-lg"
                     />
-                  </div>
-                )}
-                <CardContent className="p-4">
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900">{tip.title}</h3>
-                  <p className="text-gray-600 line-clamp-3 mb-3">{tip.description}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">{formatDate(tip.createdAt)}</span>
-                    <Button variant="link" className="text-green-600 p-0">
-                      Read More →
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Leaf className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Tips Available</h3>
-              <p className="text-gray-600">Check back later for farming tips and advice</p>
-            </CardContent>
-          </Card>
-        )}
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="prose max-w-none">
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {cropTip.description}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Footer */}

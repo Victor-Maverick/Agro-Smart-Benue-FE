@@ -10,9 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Loader2, Plus, Wheat, Edit, Trash2, TrendingUp, Search, Filter, MoreVertical } from "lucide-react"
+
+import { Loader2, Plus, Wheat, Search } from "lucide-react"
 import { useToast } from "@/contexts/ToastContext"
+import ConfirmationModal from "@/components/ConfirmationModal"
+import Dropdown from "@/components/Dropdown"
 
 interface Crop {
   id: number
@@ -42,6 +44,14 @@ export default function AdminCropManager() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const cropsPerPage = 8
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    cropId?: number;
+  }>({
+    isOpen: false
+  })
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -172,25 +182,39 @@ export default function AdminCropManager() {
 
   const filteredCrops = crops.filter((crop) => {
     const matchesSearch = crop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         crop.category.toLowerCase().includes(searchQuery.toLowerCase())
+                         crop.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         crop.description?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = categoryFilter === "all" || crop.category === categoryFilter
     return matchesSearch && matchesCategory
   })
 
-  const handleDelete = async (cropId: number) => {
-    if (!confirm("Are you sure you want to delete this crop?")) return
+  // Pagination
+  const totalPages = Math.ceil(filteredCrops.length / cropsPerPage)
+  const startIndex = (currentPage - 1) * cropsPerPage
+  const endIndex = startIndex + cropsPerPage
+  const paginatedCrops = filteredCrops.slice(startIndex, endIndex)
 
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, categoryFilter])
+
+  const handleDelete = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/crops/${cropId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/crops/${confirmModal.cropId}`, {
         method: "DELETE"
       })
 
       if (response.ok) {
         showToast('success', 'Crop Deleted', 'Crop has been deleted successfully.')
         fetchData()
+      } else {
+        showToast('error', 'Error', 'Failed to delete crop.')
       }
     } catch (error) {
       showToast('error', 'Error', 'Failed to delete crop. Please try again.')
+    } finally {
+      setConfirmModal({ isOpen: false })
     }
   }
 
@@ -352,33 +376,31 @@ export default function AdminCropManager() {
       {/* Search and Filter */}
       <Card className="border-green-200">
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative md:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search crops by name or category..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-[58px] rounded-[14px]"
               />
             </div>
-            <div className="flex gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="border-green-300 text-green-700 bg-transparent">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Category: {categoryFilter === "all" ? "All" : categoryFilter}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => setCategoryFilter("all")}>All Categories</DropdownMenuItem>
-                  {cropCategories.map((category) => (
-                    <DropdownMenuItem key={category} onClick={() => setCategoryFilter(category)}>
-                      {category}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div>
+              <Dropdown
+                options={[
+                  { value: 'all', label: 'All Categories' },
+                  ...cropCategories.map(cat => ({ value: cat, label: cat }))
+                ]}
+                selectedOption={
+                  categoryFilter === 'all' 
+                    ? { value: 'all', label: 'All Categories' }
+                    : { value: categoryFilter, label: categoryFilter }
+                }
+                onSelect={(option) => setCategoryFilter(option.value)}
+                placeholder="Filter by category"
+                getLabel={(option) => option.label}
+              />
             </div>
           </div>
         </CardContent>
@@ -396,13 +418,12 @@ export default function AdminCropManager() {
                   <TableHead>Planting Season</TableHead>
                   <TableHead>Harvest Season</TableHead>
                   <TableHead>Growth Period</TableHead>
-                  <TableHead>Average Price</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCrops.length > 0 ? (
-                  filteredCrops.map((crop) => {
+                {paginatedCrops.length > 0 ? (
+                  paginatedCrops.map((crop) => {
                     const priceData = cropPrices[crop.id]
                     return (
                       <TableRow key={crop.id}>
@@ -436,47 +457,31 @@ export default function AdminCropManager() {
                           {crop.growthPeriodDays ? `${crop.growthPeriodDays} days` : 'N/A'}
                         </TableCell>
                         <TableCell>
-                          {priceData ? (
-                            <div>
-                              <p className="font-medium text-green-600">
-                                {formatPrice(priceData.averagePrice)}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {priceData.priceCount} markets
-                              </p>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">No data</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEdit(crop)}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Crop
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="text-red-600" 
-                                onClick={() => handleDelete(crop.id)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete Crop
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(crop)}
+                              className="border-blue-300 text-blue-600 hover:bg-blue-50 px-3"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setConfirmModal({ isOpen: true, cropId: crop.id })}
+                              className="border-red-300 text-red-600 hover:bg-red-50 px-3"
+                            >
+                              Delete
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={6} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Wheat className="h-12 w-12 text-gray-400" />
                         <p className="text-gray-500">No crops found</p>
@@ -494,6 +499,57 @@ export default function AdminCropManager() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {filteredCrops.length > cropsPerPage && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-600">
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredCrops.length)} of {filteredCrops.length} crops
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(page)}
+                  className={currentPage === page ? "bg-green-600 hover:bg-green-700" : ""}
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false })}
+        onConfirm={handleDelete}
+        title="Sure you want to delete?"
+        message="Be sure you want to delete this crop as this action cannot be undone"
+        confirmText="Delete"
+        isDestructive={true}
+      />
     </div>
   )
 }

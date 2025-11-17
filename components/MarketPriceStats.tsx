@@ -19,10 +19,10 @@ export default function MarketPriceStats() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/market-prices/statistics`)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/market-prices/statistics`)
       if (res.ok) {
         const data = await res.json()
-        if (data.successful) {
+        if (data.status === true) {
           setStats(data.data)
         }
       }

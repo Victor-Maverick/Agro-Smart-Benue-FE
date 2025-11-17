@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Plus, Calendar, Edit, Trash2 } from "lucide-react"
 import { useToast } from "@/contexts/ToastContext"
+import ConfirmationModal from "@/components/ConfirmationModal"
 
 interface Event {
   id: number
@@ -51,8 +52,18 @@ export default function AdminEventManager() {
   })
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>("")
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    eventId?: number;
+  }>({
+    isOpen: false
+  })
 
   const { showToast } = useToast()
+
+  const isEventPast = (eventDate: string) => {
+    return new Date(eventDate) < new Date()
+  }
 
   useEffect(() => {
     fetchEvents()
@@ -206,20 +217,23 @@ export default function AdminEventManager() {
     setIsDialogOpen(true)
   }
 
-  const handleDelete = async (eventId: number) => {
-    if (!confirm("Are you sure you want to delete this event?")) return
-
+  const handleDelete = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/${eventId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/${confirmModal.eventId}`, {
         method: "DELETE"
       })
 
       if (response.ok) {
         showToast('success', 'Event Deleted', 'Event has been deleted successfully.')
-        fetchEvents()
+        // Remove the deleted event from the state immediately
+        setEvents(prevEvents => prevEvents.filter(event => event.id !== confirmModal.eventId))
+      } else {
+        showToast('error', 'Error', 'Failed to delete event.')
       }
     } catch (error) {
       showToast('error', 'Error', 'Failed to delete event. Please try again.')
+    } finally {
+      setConfirmModal({ isOpen: false })
     }
   }
 
@@ -467,19 +481,23 @@ export default function AdminEventManager() {
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       {event.title}
-                      <Badge variant={event.isActive ? "default" : "secondary"}>
-                        {event.isActive ? "Active" : "Inactive"}
-                      </Badge>
                     </CardTitle>
                     <CardDescription className="mt-2">
                       {event.description}
                     </CardDescription>
                   </div>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(event)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(event.id)}>
+                    {!isEventPast(event.eventDate) && (
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(event)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setConfirmModal({ isOpen: true, eventId: event.id })}
+                      className="border-red-300 text-red-600 hover:bg-red-50"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -536,6 +554,16 @@ export default function AdminEventManager() {
           </Card>
         )}
       </div>
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false })}
+        onConfirm={handleDelete}
+        title="Sure you want to delete?"
+        message="Be sure you want to delete this event as this action cannot be undone"
+        confirmText="Delete"
+        isDestructive={true}
+      />
     </div>
   )
 }

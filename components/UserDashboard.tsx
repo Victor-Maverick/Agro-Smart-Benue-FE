@@ -30,21 +30,23 @@ import {
     Users,
     ShoppingBag,
     Loader2,
+    User as UserIcon,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
 import CollapsibleSidebar from "@/components/CollapsibleSidebar"
 import UserProductManager from "@/components/UserProductManager"
+import UserProfile from "@/components/UserProfile"
 import Link from "next/link"
 import Image from "next/image"
 
 const sidebarItems = [
   { id: "overview", label: "Overview", icon: <BarChart3 className="h-5 w-5" /> },
+  { id: "profile", label: "Profile", icon: <UserIcon className="h-5 w-5" /> },
   { id: "crops", label: "My Crops", icon: <Leaf className="h-5 w-5" /> },
   { id: "products", label: "My Products", icon: <ShoppingBag className="h-5 w-5" /> },
   { id: "weather", label: "Weather", icon: <CloudRain className="h-5 w-5" /> },
   { id: "market", label: "Market", icon: <span className="text-lg font-bold">₦</span> },
-  { id: "community", label: "Community", icon: <Users className="h-5 w-5" /> },
 ]
 
 export default function UserDashboard() {
@@ -279,6 +281,9 @@ export default function UserDashboard() {
                             </div>
                         )}
 
+                        {/* Profile Tab */}
+                        {activeTab === "profile" && <UserProfile />}
+
                         {/* Crops Tab */}
                         {activeTab === "crops" && (
                             <div className="space-y-6">
@@ -381,22 +386,6 @@ export default function UserDashboard() {
                             </div>
                         )}
 
-                        {/* Community Tab */}
-                        {activeTab === "community" && (
-                            <div className="space-y-6">
-                                <div>
-                                    <h2 className="text-2xl font-bold text-gray-900">Community</h2>
-                                    <p className="text-gray-600">Connect with other farmers</p>
-                                </div>
-                                <Card>
-                                    <CardContent className="p-12 text-center">
-                                        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Community Features Coming Soon</h3>
-                                        <p className="text-gray-600">Connect with fellow farmers, share experiences, and learn from each other.</p>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>

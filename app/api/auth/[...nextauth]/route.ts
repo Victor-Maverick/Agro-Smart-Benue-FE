@@ -1,33 +1,103 @@
-// Simple auth API route - proxies to backend
-import { NextRequest, NextResponse } from 'next/server';
+import NextAuth, { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import axios from 'axios';
 
-// This is a simple proxy route to your backend auth endpoints
-// No NextAuth involved - just direct backend communication
+const authOptions: NextAuthOptions = {
+    providers: [
+        CredentialsProvider({
+            name: 'Credentials',
+            credentials: {
+                email: { label: 'Email', type: 'email' },
+                password: { label: 'Password', type: 'password' },
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) {
+                    console.error('Missing credentials');
+                    return null;
+                }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
-    
-    // Forward the request to your backend
-    const response = await axios.post(`${apiUrl}/api/auth/login`, body);
-    
-    return NextResponse.json(response.data);
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      return NextResponse.json(
-        { error: error.response?.data?.message || 'Authentication failed' },
-        { status: error.response?.status || 401 }
-      );
-    }
-    return NextResponse.json(
-      { error: 'An unexpected error occurred' },
-      { status: 500 }
-    );
-  }
-}
+                try {
+                    console.log('Attempting login for:', credentials.email);
+                    console.log('API URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
+                    
+                    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, {
+                        email: credentials.email,
+                        password: credentials.password,
+                    });
 
-export async function GET(request: NextRequest) {
-  return NextResponse.json({ message: 'Auth API route - use POST for login' });
-}
+                    console.log('Login response status:', response.status);
+                    console.log('Login response data:', response.data);
+
+                    // Backend returns: { status: true, data: { token, firstName, lastName, email, roles, mediaUrl } }
+                    if (response.data.status === true && response.data.data) {
+                        const loginData = response.data.data;
+                        
+                        if (loginData.token) {
+                            console.log('Login successful for:', loginData.email);
+                            return {
+                                id: loginData.email,
+                                email: loginData.email,
+                                accessToken: loginData.token,
+                                roles: loginData.roles || [],
+                                firstName: loginData.firstName || '',
+                                lastName: loginData.lastName || '',
+                                mediaUrl: loginData.mediaUrl || null,
+                            };
+                        }
+                    }
+                    
+                    console.error('Invalid response structure:', response.data);
+                    return null;
+                } catch (error) {
+                    console.error('Authorize error details:', error);
+                    if (axios.isAxiosError(error)) {
+                        console.error('Response data:', error.response?.data);
+                        console.error('Response status:', error.response?.status);
+                    }
+                    return null;
+                }
+            },
+        }),
+    ],
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+                token.email = user.email;
+                token.accessToken = user.accessToken;
+                token.roles = user.roles;
+                token.firstName = user.firstName;
+                token.lastName = user.lastName;
+                token.mediaUrl = user.mediaUrl;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (token) {
+                session.user.id = token.id as string;
+                session.user.email = token.email as string;
+                session.accessToken = token.accessToken as string;
+                session.user.roles = token.roles as string[];
+                session.user.firstName = token.firstName as string;
+                session.user.lastName = token.lastName as string;
+                session.user.mediaUrl = token.mediaUrl as string | null;
+            }
+            return session;
+        },
+    },
+    pages: {
+        signIn: '/login',
+    },
+    session: {
+        strategy: 'jwt',
+        maxAge: 24 * 60 * 60, // 1 day in seconds (86400 seconds)
+    },
+    jwt: {
+        maxAge: 24 * 60 * 60, // 1 day in seconds
+    },
+    secret: process.env.NEXTAUTH_SECRET,
+    debug: process.env.NODE_ENV === 'development',
+};
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };

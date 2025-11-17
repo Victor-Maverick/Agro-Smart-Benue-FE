@@ -19,6 +19,7 @@ import Link from "next/link"
 import Image from "next/image"
 import EnhancedEventsHero from "./EnhancedEventsHero"
 import WeatherForecast from "./WeatherForecast"
+import CropTipsCarousel from "./CropTipsCarousel"
 import ReviewSection from "./ReviewSection"
 import Header from "./Header"
 
@@ -171,6 +172,9 @@ export default function BFPCLanding() {
 
       {/* Weather Forecast Section */}
       <WeatherForecast />
+
+      {/* Crop Tips Carousel Section */}
+      <CropTipsCarousel />
 
       {/* Events Hero Section */}
       <EnhancedEventsHero />
@@ -445,6 +449,9 @@ export default function BFPCLanding() {
         </div>
       </section>
 
+      {/* Review Section */}
+      <ReviewSection />
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-green-600 to-green-700">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -462,9 +469,6 @@ export default function BFPCLanding() {
           </div>
         </div>
       </section>
-
-      {/* Review Section */}
-      <ReviewSection />
 
       {/* Footer */}
       <footer id="contact" className="bg-[#001E18] text-white pt-20 pb-6">
