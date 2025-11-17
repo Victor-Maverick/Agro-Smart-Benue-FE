@@ -84,9 +84,12 @@ export default function Login() {
         if (session?.user?.roles) {
           const roles = session.user.roles
           const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
+          const isFarmer = roles.includes('FARMER')
           
           if (isAdmin) {
             router.push("/admin")
+          } else if (isFarmer) {
+            router.push("/dashboard")
           } else {
             router.push("/dashboard")
           }

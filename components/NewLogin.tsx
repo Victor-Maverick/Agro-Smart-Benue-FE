@@ -68,11 +68,12 @@ export default function NewLogin() {
         // Get session to check user roles
         const { getSession } = await import('next-auth/react')
         const session = await getSession()
-        
+        console.log("Session: ",session)
         // Redirect based on role
         if (session?.user?.roles) {
           const roles = session.user.roles
           const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
+          const isFarmer = roles.includes('FARMER')
           
           if (isAdmin) {
             router.push("/admin")
