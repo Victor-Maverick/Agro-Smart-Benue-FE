@@ -30,7 +30,6 @@ const authOptions: NextAuthOptions = {
                     console.log('Login response status:', response.status);
                     console.log('Login response data:', response.data);
 
-                    // Backend returns: { status: true, data: { token, firstName, lastName, email, roles, mediaUrl } }
                     if (response.data.status === true && response.data.data) {
                         const loginData = response.data.data;
                         
@@ -98,7 +97,7 @@ const authOptions: NextAuthOptions = {
         maxAge: 24 * 60 * 60, // 1 day in seconds
     },
     secret: process.env.NEXTAUTH_SECRET,
-    debug: process.env.NODE_ENV === 'development',
+    debug: process.env.NODE_ENV === 'production',
 };
 
 const handler = NextAuth(authOptions);
