@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import axios from 'axios';
+import { getApiUrl } from '@/lib/config';
 
 const authOptions: NextAuthOptions = {
     providers: [
@@ -17,10 +18,11 @@ const authOptions: NextAuthOptions = {
                 }
 
                 try {
+                    const loginUrl = getApiUrl('/api/auth/login');
                     console.log('Attempting login for:', credentials.email);
-                    console.log('API URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
+                    console.log('Login URL:', loginUrl);
                     
-                    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, {
+                    const response = await axios.post(loginUrl, {
                         email: credentials.email,
                         password: credentials.password,
                     });
@@ -100,4 +102,5 @@ const authOptions: NextAuthOptions = {
 };
 
 const handler = NextAuth(authOptions);
+
 export { handler as GET, handler as POST };

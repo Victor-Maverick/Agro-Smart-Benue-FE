@@ -12,6 +12,7 @@ import AdminCropManager from "@/components/AdminCropManager"
 import AdminProductsDemandsManager from "@/components/AdminProductsDemandsManager"
 import AdminCropTipManager from "@/components/AdminCropTipManager"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import { getApiUrl } from "@/lib/config"
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#14b8a6']
 
@@ -58,7 +59,7 @@ export default function AdminDashboard() {
 
   const fetchStatistics = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/market-prices/statistics`)
+      const response = await fetch(getApiUrl('/api/market-prices/statistics'))
       if (response.ok) {
         const data = await response.json()
         setStatistics(data.data)
@@ -70,7 +71,7 @@ export default function AdminDashboard() {
 
   const fetchUpcomingEvents = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/upcoming`)
+      const response = await fetch(getApiUrl('/api/events/upcoming'))
       if (response.ok) {
         const data = await response.json()
         setUpcomingEvents(data.data || [])
@@ -86,11 +87,11 @@ export default function AdminDashboard() {
     try {
       // Fetch all stats in parallel
       const [usersRes, eventsRes, pricesRes, cropsRes, reviewsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/allCount`),
-        fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/events/active-count`),
-        fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/market-prices/statistics`),
-        fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/crops`),
-        fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/reviews/count`)
+        fetch(getApiUrl('/api/users/allCount')),
+        fetch(getApiUrl('/api/events/active-count')),
+        fetch(getApiUrl('/api/market-prices/statistics')),
+        fetch(getApiUrl('/api/crops')),
+        fetch(getApiUrl('/api/reviews/count'))
       ])
 
       const newStats = { ...stats }
