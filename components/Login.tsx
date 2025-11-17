@@ -75,7 +75,24 @@ export default function Login() {
 
       if (result?.ok) {
         showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
-        router.push("/dashboard")
+        
+        // Get session to check user roles
+        const { getSession } = await import('next-auth/react')
+        const session = await getSession()
+        
+        // Redirect based on role
+        if (session?.user?.roles) {
+          const roles = session.user.roles
+          const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
+          
+          if (isAdmin) {
+            router.push("/admin")
+          } else {
+            router.push("/dashboard")
+          }
+        } else {
+          router.push("/dashboard")
+        }
       } else {
         showToast('error', 'Login Failed', 'Invalid email or password. Please try again.')
       }
