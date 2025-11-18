@@ -65,9 +65,17 @@ export default function NewLogin() {
       if (result?.ok) {
         showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
         
-        // Get session to check user roles
+        // Get session to check user roles with retry logic
         const { getSession } = await import('next-auth/react')
-        const session = await getSession()
+        
+        // Wait a bit for session to be established, then retry if needed
+        let session = await getSession()
+        let retries = 0
+        while (!session?.user && retries < 3) {
+          await new Promise(resolve => setTimeout(resolve, 300))
+          session = await getSession()
+          retries++
+        }
         
         // Redirect based on role with full page reload
         if (session?.user?.roles) {
