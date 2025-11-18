@@ -55,46 +55,49 @@ export default function NewLogin() {
 
     setLoading(true)
     try {
-      // Use NextAuth signIn with credentials
-      const result = await signIn('credentials', {
+      // First call backend to get user data including roles
+      const axios = (await import('axios')).default
+      const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+      
+      const backendResponse = await axios.post(`${API_URL}/api/auth/login`, {
         email: formData.email,
         password: formData.password,
-        redirect: false,
       })
 
-      if (result?.ok) {
-        showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
+      if (backendResponse.data && backendResponse.data.status) {
+        const userData = backendResponse.data.data
         
-        // Get session to check user roles with retry logic
-        const { getSession } = await import('next-auth/react')
-        
-        // Wait a bit for session to be established, then retry if needed
-        let session = await getSession()
-        let retries = 0
-        while (!session?.user && retries < 3) {
-          await new Promise(resolve => setTimeout(resolve, 300))
-          session = await getSession()
-          retries++
-        }
-        
-        // Redirect based on role with full page reload
-        if (session?.user?.roles) {
-          const roles = session.user.roles
+        // Now sign in with NextAuth
+        const result = await signIn('credentials', {
+          email: formData.email,
+          password: formData.password,
+          redirect: false,
+        })
+
+        if (result?.ok) {
+          showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
+          
+          // Use roles from backend response to redirect
+          const roles = userData.roles || []
           const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
           
           if (isAdmin) {
-            window.location.href = "/admin"
+            router.push("/admin")
           } else {
-            window.location.href = "/dashboard"
+            router.push("/dashboard")
           }
         } else {
-          window.location.href = "/dashboard"
+          showToast('error', 'Login Failed', 'Invalid email or password. Please try again.')
         }
       } else {
-        showToast('error', 'Login Failed', 'Invalid email or password. Please try again.')
+        showToast('error', 'Login Failed', backendResponse.data?.message || 'Invalid email or password.')
       }
-    } catch (error) {
-      showToast('error', 'Error', 'Something went wrong. Please try again.')
+    } catch (error: any) {
+      console.error('Login error:', error)
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          'An error occurred during login'
+      showToast('error', 'Login Failed', errorMessage)
     } finally {
       setLoading(false)
     }
