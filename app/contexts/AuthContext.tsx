@@ -26,7 +26,7 @@ interface AuthContextType {
   loading: boolean
   login: (email: string, password: string, captchaToken?: string) => Promise<{ success: boolean; error?: string; needsVerification?: boolean; email?: string }>
   signup: (userData: any) => Promise<{ success: boolean; error?: string }>
-  logout: () => void
+  logout: () => Promise<void>
   googleLogin: () => Promise<boolean>
 }
 
@@ -35,23 +35,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
 
   useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem("bfpc_user")
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser))
-      } catch (error) {
-        console.error("Error parsing saved user:", error)
-        localStorage.removeItem("bfpc_user")
-      }
-    }
+    // No longer using localStorage - rely on NextAuth session
     setLoading(false)
   }, [])
 
-  const login = async (email: string, password: string, captchaToken?: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string, captchaToken?: string): Promise<{ success: boolean; error?: string; needsVerification?: boolean; email?: string }> => {
     setLoading(true)
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
@@ -68,28 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.data && response.data.status) {
         const userData = response.data.data
         
-        const user: User = {
-          id: userData.email,
-          name: `${userData.firstName} ${userData.lastName}`,
-          email: userData.email,
-          phone: userData.phone,
-          avatar: userData.mediaUrl,
-          farmDetails: {
-            farmSize: "0",
-            location: "",
-            crops: [],
-            experience: "0 years",
-            soilType: "Unknown",
-          },
-        }
-
-        setUser(user)
-        localStorage.setItem("bfpc_user", JSON.stringify(user))
-
-        // Sign in with NextAuth
+        // Sign in with NextAuth - this will store everything in the session
         await signIn("credentials", {
           email,
-          token: userData.token,
+          password,
           redirect: false
         })
 
@@ -166,21 +138,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Simulate Google OAuth
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      const googleUser: User = {
-        id: "google_" + Date.now(),
-        name: "Google User",
-        email: "user@gmail.com",
-        farmDetails: {
-          farmSize: "3.0",
-          location: "Benue State",
-          crops: ["Rice", "Yam"],
-          experience: "5 years",
-          soilType: "Clay",
-        },
-      }
-
-      setUser(googleUser)
-      localStorage.setItem("bfpc_user", JSON.stringify(googleUser))
+      // Google OAuth would be handled by NextAuth provider
+      // For now, this is a placeholder
       setLoading(false)
       return true
     } catch (error) {
@@ -190,14 +149,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
-    setUser(null)
-    localStorage.removeItem("bfpc_user")
-    
-    // Sign out from NextAuth
-    const { signOut } = await import("next-auth/react")
-    await signOut({ redirect: false })
-    
-    router.push("/")
+    try {
+      // Get the session to retrieve the access token
+      const { getSession, signOut } = await import("next-auth/react")
+      const session = await getSession()
+      
+      // Call backend logout endpoint if we have a token
+      if (session?.accessToken) {
+        const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+        try {
+          await axios.post(
+            `${API_URL}/api/auth/logout`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${session.accessToken}`
+              }
+            }
+          )
+        } catch (error) {
+          console.error("Backend logout error:", error)
+          // Continue with frontend logout even if backend fails
+        }
+      }
+      
+      // Clear local state
+      setUser(null)
+      
+      // Clear any localStorage items
+      localStorage.clear()
+      
+      // Clear session storage as well
+      sessionStorage.clear()
+      
+      // Sign out from NextAuth - this clears the session completely
+      await signOut({ redirect: false })
+      
+      // Force page reload to clear all cached data and state
+      window.location.href = "/"
+    } catch (error) {
+      console.error("Error during logout:", error)
+      // Even if there's an error, try to clear everything
+      localStorage.clear()
+      sessionStorage.clear()
+      window.location.href = "/"
+    }
   }
 
   return (

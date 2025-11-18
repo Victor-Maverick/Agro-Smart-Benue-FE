@@ -58,14 +58,18 @@ export default function MarketPage() {
       setLoading(true)
       const productsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/all`)
       console.log("Products", productsRes.data)
-      const fetchedProducts = productsRes.data
-      setProducts(fetchedProducts)
-      setTopPerformer(fetchedProducts[0] || null)
+      if (productsRes.data.status === true) {
+        const fetchedProducts = productsRes.data.data || []
+        setProducts(fetchedProducts)
+        setTopPerformer(fetchedProducts[0] || null)
+      }
 
       const demandsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demands`)
-      const fetchedDemands = demandsRes.data?.data || []
-      console.log("Demands: ", fetchedDemands)
-      setDemands(fetchedDemands)
+      console.log("Demands: ", demandsRes.data)
+      if (demandsRes.data.status === true) {
+        const fetchedDemands = demandsRes.data.data || []
+        setDemands(fetchedDemands)
+      }
     } catch (error) {
       console.error("Failed to fetch market data:", error)
       setProducts([])

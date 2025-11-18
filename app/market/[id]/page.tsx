@@ -41,7 +41,9 @@ export default function ProductDetailPage() {
     try {
       setLoading(true)
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/get-by-id?id=${params.id}`)
-      setProduct(response.data)
+      if (response.data.status === true) {
+        setProduct(response.data.data)
+      }
     } catch (error) {
       console.error("Failed to fetch product:", error)
       setProduct(null)

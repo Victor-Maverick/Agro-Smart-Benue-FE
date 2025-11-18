@@ -39,6 +39,7 @@ import UserProductManager from "@/components/UserProductManager"
 import UserProfile from "@/components/UserProfile"
 import Link from "next/link"
 import Image from "next/image"
+import axios from "axios"
 
 const sidebarItems = [
   { id: "overview", label: "Overview", icon: <BarChart3 className="h-5 w-5" /> },
@@ -84,8 +85,37 @@ export default function UserDashboard() {
         }
     }
 
-    const handleLogout = () => {
-        signOut({ callbackUrl: "/" })
+    const handleLogout = async () => {
+        try {
+            // Call backend logout endpoint if we have a token
+            if (session?.accessToken) {
+                const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+                try {
+                    await axios.post(
+                        `${API_URL}/api/auth/logout`,
+                        {},
+                        {
+                            headers: {
+                                Authorization: `Bearer ${session.accessToken}`
+                            }
+                        }
+                    )
+                } catch (error) {
+                    console.error("Backend logout error:", error)
+                    // Continue with frontend logout even if backend fails
+                }
+            }
+        } catch (error) {
+            console.error("Error during logout:", error)
+        }
+        
+        // Clear all storage
+        localStorage.clear()
+        sessionStorage.clear()
+        
+        // Sign out from NextAuth and force reload
+        await signOut({ redirect: false })
+        window.location.href = "/"
     }
 
     const cropData = [

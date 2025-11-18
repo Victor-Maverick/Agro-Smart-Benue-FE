@@ -307,75 +307,7 @@ export default function AdminDashboard() {
               </Card>
             )}
 
-            {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Upcoming Events</CardTitle>
-                  <CardDescription>Events from database</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {loadingEvents ? (
-                    <p className="text-sm text-gray-500">Loading events...</p>
-                  ) : upcomingEvents.length > 0 ? (
-                    upcomingEvents.slice(0, 3).map((event, index) => (
-                      <div key={event.id} className="flex items-center space-x-4">
-                        <div className={`w-2 h-2 rounded-full ${
-                          index === 0 ? 'bg-green-500' : index === 1 ? 'bg-blue-500' : 'bg-orange-500'
-                        }`}></div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{event.title}</p>
-                          <p className="text-xs text-gray-500">
-                            {event.location} - {formatEventDate(event.eventDate)}
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">No upcoming events</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Price Updates</CardTitle>
-                  <CardDescription>Recent market price changes</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium">Rice - Makurdi Market</p>
-                      <p className="text-xs text-gray-500">Updated 2 hours ago</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-green-600">₦45,000</p>
-                      <p className="text-xs text-green-600">+2.3%</p>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium">Yam - Gboko Market</p>
-                      <p className="text-xs text-gray-500">Updated 4 hours ago</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-green-600">₦23,000</p>
-                      <p className="text-xs text-gray-500">No change</p>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium">Soybean - Katsina-Ala</p>
-                      <p className="text-xs text-gray-500">Updated 6 hours ago</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-green-600">₦54,000</p>
-                      <p className="text-xs text-red-600">-1.8%</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            
             </div>
           )}
 

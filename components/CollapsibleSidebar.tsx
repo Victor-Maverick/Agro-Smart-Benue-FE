@@ -18,7 +18,8 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
+import axios from "axios"
 
 interface SidebarItem {
   id: string
@@ -39,12 +40,46 @@ export default function CollapsibleSidebar({
   onTabChange, 
   title 
 }: CollapsibleSidebarProps) {
+  const { data: session } = useSession()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   const handleTabChange = (tabId: string) => {
     onTabChange(tabId)
     setIsMobileOpen(false) // Close mobile menu after selection
+  }
+
+  const handleLogout = async () => {
+    try {
+      // Call backend logout endpoint if we have a token
+      if (session?.accessToken) {
+        const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+        try {
+          await axios.post(
+            `${API_URL}/api/auth/logout`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${session.accessToken}`
+              }
+            }
+          )
+        } catch (error) {
+          console.error("Backend logout error:", error)
+          // Continue with frontend logout even if backend fails
+        }
+      }
+    } catch (error) {
+      console.error("Error during logout:", error)
+    }
+    
+    // Clear all storage
+    localStorage.clear()
+    sessionStorage.clear()
+    
+    // Sign out from NextAuth and force reload
+    await signOut({ redirect: false })
+    window.location.href = "/"
   }
 
   return (
@@ -136,7 +171,7 @@ export default function CollapsibleSidebar({
           {/* Logout Button at Bottom */}
           <div className="border-t border-gray-200 pt-2 mt-2">
             <button
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={handleLogout}
               className={cn(
                 "w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors",
                 "text-red-600 hover:bg-red-50"

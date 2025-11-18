@@ -39,18 +39,21 @@ export default function AdminProductsDemandsManager() {
   const fetchData = async () => {
     try {
       // Fetch all products from API
-      const productsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products`)
-      if (productsResponse.ok) {
+      const productsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/all`)
         const productsData = await productsResponse.json()
-        setProducts(productsData.data || [])
-      }
+        console.log("PRoducts:",productsData);
+        setProducts(productsData || [])
+      
 
       // Fetch all demands from API
-      const demandsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/demands`)
-      if (demandsResponse.ok) {
+      const demandsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demands`)
         const demandsData = await demandsResponse.json()
-        setDemands(demandsData.data || [])
-      }
+        if (productsData.status == true) {
+          setProducts(productsData.data || [])
+        }
+        if (demandsData.status == true) {
+          setDemands(demandsData.data || [])
+        }
     } catch (error) {
       console.error("Failed to fetch data:", error)
     } finally {
@@ -150,7 +153,7 @@ export default function AdminProductsDemandsManager() {
                     </div>
                     <div>
                       <p className="font-medium text-gray-700">Status</p>
-                      <p className="text-gray-600 capitalize">{demand.status.toLowerCase()}</p>
+                      {/* <p className="text-gray-600 capitalize">{demand.status.toLowerCase()}</p> */}
                     </div>
                   </div>
                 </CardContent>
