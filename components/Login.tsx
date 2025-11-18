@@ -89,6 +89,19 @@ export default function Login() {
         if (result?.ok) {
           showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
           
+          // Wait for session to be fully established
+          const { getSession } = await import('next-auth/react')
+          let session = null
+          let attempts = 0
+          const maxAttempts = 10
+          
+          // Poll for session with exponential backoff
+          while (!session && attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 100 * (attempts + 1)))
+            session = await getSession()
+            attempts++
+          }
+          
           // Use roles from backend response to redirect
           const roles = userData.roles || []
           const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')

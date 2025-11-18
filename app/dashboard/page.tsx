@@ -8,16 +8,14 @@ import Loading from "@/components/Loading"
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
-  const router = useRouter()
 
-  useEffect(() => {
-    if (status === "loading") return // Still loading
-    if (!session) {
-      router.push("/login")
-    }
-  }, [session, status, router])
+  // Let middleware handle auth redirect - don't redirect here
+  // This prevents race conditions in production
+  if (status === "loading") {
+    return <Loading />
+  }
 
-  if (status === "loading" || !session) {
+  if (!session) {
     return <Loading />
   }
 
