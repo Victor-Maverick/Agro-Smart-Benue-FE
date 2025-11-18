@@ -68,20 +68,19 @@ export default function NewLogin() {
         // Get session to check user roles
         const { getSession } = await import('next-auth/react')
         const session = await getSession()
-        console.log("Session: ",session)
-        // Redirect based on role
+        
+        // Redirect based on role with full page reload
         if (session?.user?.roles) {
           const roles = session.user.roles
           const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
-          const isFarmer = roles.includes('FARMER')
           
           if (isAdmin) {
-            router.push("/admin")
+            window.location.href = "/admin"
           } else {
-            router.push("/dashboard")
+            window.location.href = "/dashboard"
           }
         } else {
-          router.push("/dashboard")
+          window.location.href = "/dashboard"
         }
       } else {
         showToast('error', 'Login Failed', 'Invalid email or password. Please try again.')

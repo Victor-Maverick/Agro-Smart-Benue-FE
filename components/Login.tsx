@@ -47,8 +47,8 @@ export default function Login() {
       newErrors.password = passwordValidation.error!
     }
 
-    // Validate captcha
-    if (!captchaToken) {
+    // Validate captcha only if the captcha widget is shown
+    if (process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && !captchaToken) {
       showToast('error', 'Captcha Required', 'Please complete the captcha challenge.')
       return false
     }
@@ -80,21 +80,18 @@ export default function Login() {
         const { getSession } = await import('next-auth/react')
         const session = await getSession()
         
-        // Redirect based on role
+        // Redirect based on role with full page reload
         if (session?.user?.roles) {
           const roles = session.user.roles
           const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
-          const isFarmer = roles.includes('FARMER')
           
           if (isAdmin) {
-            router.push("/admin")
-          } else if (isFarmer) {
-            router.push("/dashboard")
+            window.location.href = "/admin"
           } else {
-            router.push("/dashboard")
+            window.location.href = "/dashboard"
           }
         } else {
-          router.push("/dashboard")
+          window.location.href = "/dashboard"
         }
       } else {
         showToast('error', 'Login Failed', 'Invalid email or password. Please try again.')
@@ -164,7 +161,7 @@ export default function Login() {
 
             {/* reCAPTCHA */}
             {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
-              <div className="flex justify-start">
+              <div className="flex justify-center">
                 <ReCAPTCHA
                   sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
                   onChange={handleCaptchaChange}
