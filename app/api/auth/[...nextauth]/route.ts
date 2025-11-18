@@ -86,6 +86,21 @@ const authOptions: NextAuthOptions = {
             return session;
         },
     },
+    events: {
+        async signOut({ token }) {
+            // Call logout API when user signs out
+            try {
+                const logoutUrl = getApiUrl('/api/auth/logout');
+                await axios.post(logoutUrl, {}, {
+                    headers: {
+                        Authorization: `Bearer ${token.accessToken}`
+                    }
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        },
+    },
     pages: {
         signIn: '/login',
     },

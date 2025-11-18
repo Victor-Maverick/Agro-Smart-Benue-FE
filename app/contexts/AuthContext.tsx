@@ -176,7 +176,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Clear local state
       setUser(null)
       
-      // Clear any localStorage items
+      // Clear all localStorage items
+      localStorage.removeItem('BFPCAuthToken')
+      localStorage.removeItem('userEmail')
       localStorage.clear()
       
       // Clear session storage as well
@@ -184,6 +186,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Sign out from NextAuth - this clears the session completely
       await signOut({ redirect: false })
+      
+      // Add a small delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
       // Force page reload to clear all cached data and state
       window.location.href = "/"

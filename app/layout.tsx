@@ -5,7 +5,9 @@ import "./globals.css"
 import { AuthProvider } from "./contexts/AuthContext"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ToastProvider } from "@/contexts/ToastContext"
+import { LogoutProvider } from "@/contexts/LogoutContext"
 import SessionProvider from "@/components/SessionProvider"
+import LogoutSpinner from "@/components/LogoutSpinner"
 
 
 const inter = Inter({
@@ -91,9 +93,12 @@ export default function RootLayout({
         <SessionProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             <ToastProvider>
-              <AuthProvider>
-                {children}
-              </AuthProvider>
+              <LogoutProvider>
+                <AuthProvider>
+                  <LogoutSpinner />
+                  {children}
+                </AuthProvider>
+              </LogoutProvider>
             </ToastProvider>
           </ThemeProvider>
         </SessionProvider>
