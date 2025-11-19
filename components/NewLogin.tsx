@@ -90,17 +90,23 @@ export default function NewLogin() {
             attempts++
           }
           
+          console.log('Session established:', session)
+          
           // Use roles from backend response to redirect
           const roles = userData.roles || []
           const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
           
+          console.log('User roles:', roles, 'isAdmin:', isAdmin)
+          
+          // Use window.location for more reliable redirect in production
           if (isAdmin) {
-            router.push("/admin")
+            window.location.href = "/admin"
           } else {
-            router.push("/dashboard")
+            window.location.href = "/dashboard"
           }
         } else {
-          showToast('error', 'Login Failed', 'Invalid email or password. Please try again.')
+          console.error('NextAuth signIn failed:', result)
+          showToast('error', 'Login Failed', result?.error || 'Invalid email or password. Please try again.')
         }
       } else {
         showToast('error', 'Login Failed', backendResponse.data?.message || 'Invalid email or password.')
