@@ -8,13 +8,21 @@ export default withAuth(
     
     console.log('[Middleware] Path:', path, 'Has token:', !!token)
     
-    // If user is authenticated, allow the request
+    // If user is authenticated and trying to access login/signup, redirect to dashboard
+    if (token && (path === '/login' || path === '/signup')) {
+      const roles = (token.roles as string[]) || []
+      const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
+      const redirectUrl = isAdmin ? '/admin' : '/dashboard'
+      
+      console.log('[Middleware] Authenticated user on login page, redirecting to:', redirectUrl)
+      return NextResponse.redirect(new URL(redirectUrl, req.url))
+    }
+    
     return NextResponse.next()
   },
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        // Check if the route requires authentication
         const path = req.nextUrl.pathname
         
         // Public routes that don't require authentication
@@ -38,7 +46,7 @@ export default withAuth(
         
         console.log('[Middleware] Authorized check - Path:', path, 'Is public:', isPublicRoute, 'Has token:', !!token)
         
-        // Allow access to public routes
+        // Allow access to public routes (including login for unauthenticated users)
         if (isPublicRoute) {
           return true
         }

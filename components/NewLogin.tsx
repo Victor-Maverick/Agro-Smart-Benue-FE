@@ -55,60 +55,54 @@ export default function NewLogin() {
 
     setLoading(true)
     try {
-      console.log('Starting login process...')
+      console.log('[NewLogin] Starting login process...')
       
-      // Sign in with NextAuth directly - it will call the backend
+      // Get session first to check roles after login
+      const { getSession } = await import('next-auth/react')
+      
+      // Sign in with NextAuth - use redirect: true with callbackUrl
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        redirect: false,
+        redirect: false, // We'll handle redirect manually after getting session
       })
 
-      console.log('NextAuth result:', result)
+      console.log('[NewLogin] NextAuth result:', result)
 
-      if (result?.ok) {
-        showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
+      if (result?.ok && !result.error) {
+        console.log('[NewLogin] Sign in successful, fetching session...')
         
-        // Wait for session to be fully established
-        const { getSession } = await import('next-auth/react')
-        let session = null
-        let attempts = 0
-        const maxAttempts = 10
+        // Wait a bit for session to be created
+        await new Promise(resolve => setTimeout(resolve, 300))
         
-        // Poll for session with exponential backoff
-        while (!session && attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 100 * (attempts + 1)))
-          session = await getSession()
-          attempts++
-        }
+        // Get the session to determine redirect
+        const session = await getSession()
+        console.log('[NewLogin] Session retrieved:', session)
         
-        console.log('Session established:', session)
-        
-        if (!session) {
-          throw new Error('Failed to establish session')
-        }
-        
-        // Use roles from session to redirect
-        const roles = session.user?.roles || []
-        const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
-        
-        console.log('User roles:', roles, 'isAdmin:', isAdmin)
-        
-        // Small delay to ensure session is saved
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        // Use window.location for more reliable redirect in production
-        if (isAdmin) {
-          window.location.href = "/admin"
+        if (session?.user) {
+          showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
+          
+          const roles = session.user.roles || []
+          const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
+          
+          console.log('[NewLogin] User roles:', roles, 'isAdmin:', isAdmin)
+          
+          // Redirect based on role
+          const redirectUrl = isAdmin ? '/admin' : '/dashboard'
+          console.log('[NewLogin] Redirecting to:', redirectUrl)
+          
+          // Use router.replace to avoid back button issues
+          router.replace(redirectUrl)
         } else {
-          window.location.href = "/dashboard"
+          console.error('[NewLogin] Session exists but no user data')
+          showToast('error', 'Login Failed', 'Failed to establish session. Please try again.')
         }
       } else {
-        console.error('NextAuth signIn failed:', result)
+        console.error('[NewLogin] NextAuth signIn failed:', result)
         showToast('error', 'Login Failed', result?.error || 'Invalid email or password. Please try again.')
       }
     } catch (error: any) {
-      console.error('Login error:', error)
+      console.error('[NewLogin] Login error:', error)
       const errorMessage = error.response?.data?.message || 
                           error.response?.data?.error || 
                           error.message ||

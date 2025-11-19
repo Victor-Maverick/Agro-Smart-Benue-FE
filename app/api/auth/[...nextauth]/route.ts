@@ -82,13 +82,13 @@ const authOptions: NextAuthOptions = {
                 token.firstName = user.firstName;
                 token.lastName = user.lastName;
                 token.mediaUrl = user.mediaUrl;
-                console.log('[NextAuth] JWT callback - token created:', JSON.stringify(token));
+                console.log('[NextAuth] JWT callback - token created with roles:', token.roles);
             }
             return token;
         },
         async session({ session, token }) {
             if (token) {
-                console.log('[NextAuth] Session callback - token:', JSON.stringify(token));
+                console.log('[NextAuth] Session callback - building session from token');
                 session.user.id = token.id as string;
                 session.user.email = token.email as string;
                 session.accessToken = token.accessToken as string;
@@ -96,9 +96,21 @@ const authOptions: NextAuthOptions = {
                 session.user.firstName = token.firstName as string;
                 session.user.lastName = token.lastName as string;
                 session.user.mediaUrl = token.mediaUrl as string | null;
-                console.log('[NextAuth] Session callback - session created:', JSON.stringify(session));
+                console.log('[NextAuth] Session callback - session created with roles:', session.user.roles);
             }
             return session;
+        },
+        async redirect({ url, baseUrl }) {
+            console.log('[NextAuth] Redirect callback - url:', url, 'baseUrl:', baseUrl);
+            // Allow relative callback URLs
+            if (url.startsWith('/')) {
+                return `${baseUrl}${url}`;
+            }
+            // Allow callback URLs on the same origin
+            if (new URL(url).origin === baseUrl) {
+                return url;
+            }
+            return baseUrl;
         },
     },
     events: {
