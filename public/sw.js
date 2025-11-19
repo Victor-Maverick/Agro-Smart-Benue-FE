@@ -79,6 +79,11 @@ self.addEventListener("fetch", (event) => {
             return response
           }
 
+          // Only cache GET requests (POST, PUT, DELETE cannot be cached)
+          if (event.request.method !== 'GET') {
+            return response
+          }
+
           // Clone the response
           const responseToCache = response.clone()
 

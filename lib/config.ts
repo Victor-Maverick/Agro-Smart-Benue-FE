@@ -3,12 +3,13 @@
 
 // Determine if we're in production based on the hostname
 const isProduction = typeof window !== 'undefined' 
-  ? window.location.hostname === 'agrosmartbenue.com'
+  ? (window.location.hostname === 'agrosmartbenue.com' || 
+     window.location.hostname === 'www.agrosmartbenue.com')
   : process.env.NODE_ENV === 'production'
 
 // Get API base URL with proper fallback
 const getApiBaseUrl = () => {
-  // First, try environment variable
+  // First, try environment variable (this is set during build)
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
     return process.env.NEXT_PUBLIC_API_BASE_URL
   }
@@ -55,11 +56,14 @@ export function getApiUrl(endpoint: string): string {
   return `${baseUrl}${cleanEndpoint}`
 }
 
-// Log configuration in development
-if (process.env.NODE_ENV === 'development') {
+// Log configuration (always log to help debug production issues)
+if (typeof window !== 'undefined') {
   console.log('App Configuration:', {
     apiBaseUrl: config.apiBaseUrl,
     appUrl: config.appUrl,
     environment: process.env.NODE_ENV,
+    isProduction: config.isProduction,
+    hostname: window.location.hostname,
+    envVar: process.env.NEXT_PUBLIC_API_BASE_URL,
   })
 }
