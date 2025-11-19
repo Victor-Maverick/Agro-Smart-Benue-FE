@@ -3,21 +3,7 @@ import { NextResponse } from "next/server"
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token
-    const path = req.nextUrl.pathname
-    
-    console.log('[Middleware] Path:', path, 'Has token:', !!token)
-    
-    // If user is authenticated and trying to access login/signup, redirect to dashboard
-    if (token && (path === '/login' || path === '/signup')) {
-      const roles = (token.roles as string[]) || []
-      const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
-      const redirectUrl = isAdmin ? '/admin' : '/dashboard'
-      
-      console.log('[Middleware] Authenticated user on login page, redirecting to:', redirectUrl)
-      return NextResponse.redirect(new URL(redirectUrl, req.url))
-    }
-    
+    // Just allow the request through
     return NextResponse.next()
   },
   {
@@ -44,9 +30,7 @@ export default withAuth(
           path === route || path.startsWith(route + '/')
         )
         
-        console.log('[Middleware] Authorized check - Path:', path, 'Is public:', isPublicRoute, 'Has token:', !!token)
-        
-        // Allow access to public routes (including login for unauthenticated users)
+        // Allow access to public routes
         if (isPublicRoute) {
           return true
         }

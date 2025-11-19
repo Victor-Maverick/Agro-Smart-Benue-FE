@@ -68,26 +68,24 @@ export default function Login() {
     try {
       console.log('[Login] Starting login process...')
       
-      // Get session first to check roles after login
-      const { getSession } = await import('next-auth/react')
-      
-      // Sign in with NextAuth - use redirect: true with callbackUrl
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        redirect: false, // We'll handle redirect manually after getting session
+        redirect: false,
       })
 
       console.log('[Login] NextAuth result:', result)
 
-      if (result?.ok && !result.error) {
+      if (result?.error) {
+        console.error('[Login] Login error:', result.error)
+        showToast('error', 'Login Failed', result.error)
+      } else if (result?.ok) {
         console.log('[Login] Sign in successful, fetching session...')
         
-        // Wait a bit for session to be created
-        await new Promise(resolve => setTimeout(resolve, 300))
+        // Fetch session via API endpoint (more reliable than getSession)
+        const response = await fetch('/api/auth/session')
+        const session = await response.json()
         
-        // Get the session to determine redirect
-        const session = await getSession()
         console.log('[Login] Session retrieved:', session)
         
         if (session?.user) {
@@ -98,26 +96,23 @@ export default function Login() {
           
           console.log('[Login] User roles:', roles, 'isAdmin:', isAdmin)
           
-          // Redirect based on role
-          const redirectUrl = isAdmin ? '/admin' : '/dashboard'
-          console.log('[Login] Redirecting to:', redirectUrl)
+          // Small delay to ensure toast is visible
+          await new Promise(resolve => setTimeout(resolve, 500))
           
-          // Use router.replace to avoid back button issues
-          router.replace(redirectUrl)
+          // Redirect based on role
+          if (isAdmin) {
+            router.push('/admin')
+          } else {
+            router.push('/dashboard')
+          }
         } else {
-          console.error('[Login] Session exists but no user data')
+          console.error('[Login] No user data in session')
           showToast('error', 'Login Failed', 'Failed to establish session. Please try again.')
         }
-      } else {
-        console.error('[Login] NextAuth signIn failed:', result)
-        showToast('error', 'Login Failed', result?.error || 'Invalid email or password. Please try again.')
       }
     } catch (error: any) {
       console.error('[Login] Login error:', error)
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message ||
-                          'An error occurred during login'
+      const errorMessage = error.message || 'An error occurred during login'
       showToast('error', 'Login Failed', errorMessage)
     } finally {
       setLoading(false)

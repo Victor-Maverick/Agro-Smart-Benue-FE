@@ -13,8 +13,7 @@ const authOptions: NextAuthOptions = {
             },
             async authorize(credentials) {
                 if (!credentials?.email || !credentials?.password) {
-                    console.error('[NextAuth] Missing credentials');
-                    return null;
+                    throw new Error('Email and password are required');
                 }
 
                 try {
@@ -29,44 +28,40 @@ const authOptions: NextAuthOptions = {
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        timeout: 10000, // 10 second timeout
+                        timeout: 10000,
                     });
 
                     console.log('[NextAuth] Login response status:', response.status);
                     console.log('[NextAuth] Login response data:', JSON.stringify(response.data));
 
-                    if (response.data.status === true && response.data.data) {
-                        const loginData = response.data.data;
+                    const loginData = response.data.data;
+
+                    if (loginData && loginData.token) {
+                        console.log('[NextAuth] Login successful for:', loginData.email);
+                        console.log('[NextAuth] User roles:', loginData.roles);
                         
-                        if (loginData.token) {
-                            console.log('[NextAuth] Login successful for:', loginData.email);
-                            console.log('[NextAuth] User roles:', loginData.roles);
-                            
-                            const user = {
-                                id: loginData.email,
-                                email: loginData.email,
-                                accessToken: loginData.token,
-                                roles: loginData.roles || [],
-                                firstName: loginData.firstName || '',
-                                lastName: loginData.lastName || '',
-                                mediaUrl: loginData.mediaUrl || null,
-                            };
-                            
-                            console.log('[NextAuth] Returning user object:', JSON.stringify(user));
-                            return user;
-                        }
+                        return {
+                            id: loginData.id || loginData.email || credentials.email,
+                            email: loginData.email || credentials.email,
+                            accessToken: loginData.token,
+                            roles: loginData.roles || [],
+                            firstName: loginData.firstName || '',
+                            lastName: loginData.lastName || '',
+                            mediaUrl: loginData.mediaUrl || null,
+                        };
                     }
                     
-                    console.error('[NextAuth] Invalid response structure:', response.data);
-                    return null;
+                    throw new Error('Invalid login response from server');
                 } catch (error) {
                     console.error('[NextAuth] Authorize error:', error);
                     if (axios.isAxiosError(error)) {
-                        console.error('[NextAuth] Response data:', error.response?.data);
-                        console.error('[NextAuth] Response status:', error.response?.status);
-                        console.error('[NextAuth] Request URL:', error.config?.url);
+                        const errorMessage = error.response?.data?.message || 
+                                           error.response?.data?.error || 
+                                           'Invalid email or password';
+                        console.error('[NextAuth] Error message:', errorMessage);
+                        throw new Error(errorMessage);
                     }
-                    return null;
+                    throw new Error('An unexpected error occurred');
                 }
             },
         }),
@@ -99,18 +94,6 @@ const authOptions: NextAuthOptions = {
                 console.log('[NextAuth] Session callback - session created with roles:', session.user.roles);
             }
             return session;
-        },
-        async redirect({ url, baseUrl }) {
-            console.log('[NextAuth] Redirect callback - url:', url, 'baseUrl:', baseUrl);
-            // Allow relative callback URLs
-            if (url.startsWith('/')) {
-                return `${baseUrl}${url}`;
-            }
-            // Allow callback URLs on the same origin
-            if (new URL(url).origin === baseUrl) {
-                return url;
-            }
-            return baseUrl;
         },
     },
     events: {
