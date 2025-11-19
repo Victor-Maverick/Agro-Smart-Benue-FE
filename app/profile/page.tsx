@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { User, Mail, Phone, MapPin, Calendar, Edit } from 'lucide-react'
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
 interface UserProfile {
   firstName: string
@@ -87,6 +89,9 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <Header />
+
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Header */}
@@ -185,6 +190,9 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

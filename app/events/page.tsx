@@ -22,7 +22,8 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import Navigation from "@/components/Navigation"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
 // Mock events data
 const mockEvents = [
@@ -223,8 +224,8 @@ export default function EventsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-white">
-      {/* Navigation */}
-      <Navigation />
+      {/* Header */}
+      <Header />
       
       {/* Header */}
       <div className="bg-white border-b border-green-100">
@@ -407,6 +408,9 @@ export default function EventsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

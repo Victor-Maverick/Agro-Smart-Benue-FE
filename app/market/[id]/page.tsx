@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { MapPin, Package, ArrowLeft, Star, Copy, Check, Mail, Phone } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 import axios from "axios"
 
 interface Product {
@@ -104,26 +106,7 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <nav className="bg-white border-b border-green-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-[80px]">
-            <div className="flex items-center space-x-2">
-              <Link href="/" className="flex items-center space-x-2 text-green-800 hover:text-green-900 transition-colors">
-                <Image src="/images/header image.png" alt="BFPC Logo" width={64} height={64} />
-                <p className="font-bold leading-tight">Benue <span className="text-orange-600">Farmers</span> <br />Peace Corps</p>
-              </Link>
-            </div>
-            <div className="flex space-x-4">
-              <Link href="/login">
-                <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">Login</Button>
-              </Link>
-              <Link href="/signup">
-                <Button className="bg-green-600 hover:bg-green-700 text-white">Get Started</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -237,6 +220,9 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

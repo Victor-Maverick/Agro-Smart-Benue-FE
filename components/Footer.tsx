@@ -1,5 +1,7 @@
-import Image from "next/image"
+"use client"
+
 import Link from "next/link"
+import Image from "next/image"
 
 export default function Footer() {
   return (
@@ -23,11 +25,6 @@ export default function Footer() {
               <h3 className="font-semibold mb-4 text-[#c6eb5f]">Platform</h3>
               <ul className="space-y-2 text-green-200">
                 <li>
-                  <Link href="/#features" className="hover:text-white text-[14px] transition-colors">
-                    Features
-                  </Link>
-                </li>
-                <li>
                   <Link href="/market" className="hover:text-white text-[14px] transition-colors">
                     Market
                   </Link>
@@ -37,25 +34,35 @@ export default function Footer() {
                     Market Prices
                   </Link>
                 </li>
+                <li>
+                  <Link href="/crop-tips" className="hover:text-white text-[14px] transition-colors">
+                    Crop Tips
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/events" className="hover:text-white text-[14px] transition-colors">
+                    Events
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold text-[#c6eb5f] mb-4">Support</h3>
               <ul className="space-y-2 text-green-200">
                 <li>
-                  <Link href="/#about" className="hover:text-white text-[14px] transition-colors">
+                  <a href="#" className="hover:text-white text-[14px] transition-colors">
                     Help Center
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link href="/#features" className="hover:text-white text-[14px] transition-colors">
+                  <a href="#" className="hover:text-white text-[14px] transition-colors">
                     Community
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link href="/#contact" className="hover:text-white text-[14px] transition-colors">
+                  <a href="#" className="hover:text-white text-[14px] transition-colors">
                     Contact Us
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -63,19 +70,19 @@ export default function Footer() {
               <h3 className="font-semibold text-[#c6eb5f] mb-4">Company</h3>
               <ul className="space-y-2 text-green-200">
                 <li>
-                  <Link href="/#about" className="hover:text-white text-[14px] transition-colors">
+                  <a href="/#about" className="hover:text-white text-[14px] transition-colors">
                     About
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link href="/login" className="hover:text-white text-[14px] transition-colors">
-                    Login
-                  </Link>
+                  <a href="/#partnerships" className="hover:text-white text-[14px] transition-colors">
+                    Partnerships
+                  </a>
                 </li>
                 <li>
-                  <Link href="/signup" className="hover:text-white text-[14px] transition-colors">
-                    Sign Up
-                  </Link>
+                  <a href="#" className="hover:text-white text-[14px] transition-colors">
+                    Careers
+                  </a>
                 </li>
               </ul>
             </div>

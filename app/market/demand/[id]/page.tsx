@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { MapPin, ArrowLeft, Copy, Check, Mail, Phone, Calendar, Package } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 import axios from "axios"
 
 interface ProductDemand {
@@ -105,26 +107,7 @@ export default function DemandDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <nav className="bg-white border-b border-orange-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-[80px]">
-            <div className="flex items-center space-x-2">
-              <Link href="/" className="flex items-center space-x-2 text-green-800 hover:text-green-900 transition-colors">
-                <Image src="/images/header image.png" alt="BFPC Logo" width={64} height={64} />
-                <p className="font-bold leading-tight">Benue <span className="text-orange-600">Farmers</span> <br />Peace Corps</p>
-              </Link>
-            </div>
-            <div className="flex space-x-4">
-              <Link href="/login">
-                <Button variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">Login</Button>
-              </Link>
-              <Link href="/signup">
-                <Button className="bg-orange-600 hover:bg-orange-700 text-white">Get Started</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -168,7 +151,7 @@ export default function DemandDetailPage() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Quantity Needed</p>
-                    <p className="text-xl font-semibold">{demand.quantity} {demand.unit}</p>
+                    <p className="text-xl font-semibold">{demand.quantity} {demand.quantityCategory}</p>
                   </div>
                 </div>
 
@@ -187,8 +170,8 @@ export default function DemandDetailPage() {
                     <Calendar className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Deadline</p>
-                    <p className="text-xl font-semibold">{formatDate(demand.deadline)}</p>
+                    <p className="text-sm text-gray-600">Posted On</p>
+                    <p className="text-xl font-semibold">{formatDate(demand.createdAt)}</p>
                   </div>
                 </div>
               </div>
@@ -241,43 +224,14 @@ export default function DemandDetailPage() {
                     </Button>
                   </div>
                 )}
-
-                {contactEmail && (
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-orange-200">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-orange-100 rounded-full">
-                        <Mail className="h-5 w-5 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Email Address</p>
-                        <p className="font-semibold text-gray-900">{contactEmail}</p>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => copyToClipboard(contactEmail, 'email')}
-                      className="border-orange-600 text-orange-600 hover:bg-orange-50"
-                    >
-                      {copiedEmail ? (
-                        <>
-                          <Check className="h-4 w-4 mr-1" />
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-4 w-4 mr-1" />
-                          Copy
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import Link from "next/link"
 import { signOut, useSession } from "next-auth/react"
 import axios from "axios"
 
@@ -119,7 +120,7 @@ export default function CollapsibleSidebar({
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           {!isCollapsed ? (
             <>
-              <div className="flex items-center space-x-2">
+              <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                 <Image 
                   src="/images/header image.png" 
                   alt="BFPC Logo" 
@@ -128,7 +129,7 @@ export default function CollapsibleSidebar({
                   className="object-contain"
                 />
                 <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-              </div>
+              </Link>
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="text-gray-600 hover:text-gray-900 transition-colors"
@@ -137,12 +138,15 @@ export default function CollapsibleSidebar({
               </button>
             </>
           ) : (
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="w-full flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+            <Link href="/" className="w-full flex items-center justify-center hover:opacity-80 transition-opacity">
+              <Image 
+                src="/images/header image.png" 
+                alt="BFPC Logo" 
+                width={32} 
+                height={32} 
+                className="object-contain"
+              />
+            </Link>
           )}
         </div>
 
