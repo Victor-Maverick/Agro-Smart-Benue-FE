@@ -58,12 +58,24 @@ export function getApiUrl(endpoint: string): string {
 
 // Log configuration (always log to help debug production issues)
 if (typeof window !== 'undefined') {
-  console.log('App Configuration:', {
+  console.log('[Config] App Configuration:', {
     apiBaseUrl: config.apiBaseUrl,
     appUrl: config.appUrl,
     environment: process.env.NODE_ENV,
     isProduction: config.isProduction,
     hostname: window.location.hostname,
     envVar: process.env.NEXT_PUBLIC_API_BASE_URL,
+    nextAuthUrl: process.env.NEXTAUTH_URL,
+  })
+}
+
+// Also log on server side
+if (typeof window === 'undefined') {
+  console.log('[Config] Server Configuration:', {
+    apiBaseUrl: config.apiBaseUrl,
+    environment: process.env.NODE_ENV,
+    isProduction: config.isProduction,
+    nextPublicApiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+    nextAuthUrl: process.env.NEXTAUTH_URL,
   })
 }

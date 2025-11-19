@@ -66,67 +66,63 @@ export default function Login() {
 
     setLoading(true)
     try {
-      // First call backend to get user data including roles
-      const axios = (await import('axios')).default
-      const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+      console.log('Starting login process...')
       
-      const backendResponse = await axios.post(`${API_URL}/api/auth/login`, {
+      // Sign in with NextAuth directly - it will call the backend
+      const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        captchaToken: captchaToken || undefined
+        redirect: false,
       })
 
-      if (backendResponse.data && backendResponse.data.status) {
-        const userData = backendResponse.data.data
-        
-        // Now sign in with NextAuth
-        const result = await signIn('credentials', {
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
-        })
+      console.log('NextAuth result:', result)
 
-        if (result?.ok) {
-          showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
-          
-          // Wait for session to be fully established
-          const { getSession } = await import('next-auth/react')
-          let session = null
-          let attempts = 0
-          const maxAttempts = 10
-          
-          // Poll for session with exponential backoff
-          while (!session && attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 100 * (attempts + 1)))
-            session = await getSession()
-            attempts++
-          }
-          
-          console.log('Session established:', session)
-          
-          // Use roles from backend response to redirect
-          const roles = userData.roles || []
-          const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
-          
-          console.log('User roles:', roles, 'isAdmin:', isAdmin)
-          
-          // Use window.location for more reliable redirect in production
-          if (isAdmin) {
-            window.location.href = "/admin"
-          } else {
-            window.location.href = "/dashboard"
-          }
+      if (result?.ok) {
+        showToast('success', 'Welcome Back!', 'You have been logged in successfully.')
+        
+        // Wait for session to be fully established
+        const { getSession } = await import('next-auth/react')
+        let session = null
+        let attempts = 0
+        const maxAttempts = 10
+        
+        // Poll for session with exponential backoff
+        while (!session && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 100 * (attempts + 1)))
+          session = await getSession()
+          attempts++
+        }
+        
+        console.log('Session established:', session)
+        
+        if (!session) {
+          throw new Error('Failed to establish session')
+        }
+        
+        // Use roles from session to redirect
+        const roles = session.user?.roles || []
+        const isAdmin = roles.includes('ADMIN') || roles.includes('SUPER_ADMIN')
+        
+        console.log('User roles:', roles, 'isAdmin:', isAdmin)
+        
+        // Small delay to ensure session is saved
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Use window.location for more reliable redirect in production
+        if (isAdmin) {
+          window.location.href = "/admin"
         } else {
-          console.error('NextAuth signIn failed:', result)
-          showToast('error', 'Login Failed', result?.error || 'Invalid email or password. Please try again.')
+          window.location.href = "/dashboard"
         }
       } else {
-        showToast('error', 'Login Failed', backendResponse.data?.message || 'Invalid email or password.')
+        console.error('NextAuth signIn failed:', result)
+        showToast('error', 'Login Failed', result?.error || 'Invalid email or password. Please try again.')
       }
     } catch (error: any) {
       console.error('Login error:', error)
       const errorMessage = error.response?.data?.message || 
                           error.response?.data?.error || 
+                          error.message ||
                           'An error occurred during login'
       showToast('error', 'Login Failed', errorMessage)
     } finally {

@@ -3,6 +3,11 @@ import { NextResponse } from "next/server"
 
 export default withAuth(
   function middleware(req) {
+    const token = req.nextauth.token
+    const path = req.nextUrl.pathname
+    
+    console.log('[Middleware] Path:', path, 'Has token:', !!token)
+    
     // If user is authenticated, allow the request
     return NextResponse.next()
   },
@@ -19,6 +24,7 @@ export default withAuth(
           '/signup',
           '/forgot-password',
           '/verify-email',
+          '/reset-password',
           '/market',
           '/market-prices',
           '/crop-tips',
@@ -29,6 +35,8 @@ export default withAuth(
         const isPublicRoute = publicRoutes.some(route => 
           path === route || path.startsWith(route + '/')
         )
+        
+        console.log('[Middleware] Authorized check - Path:', path, 'Is public:', isPublicRoute, 'Has token:', !!token)
         
         // Allow access to public routes
         if (isPublicRoute) {
