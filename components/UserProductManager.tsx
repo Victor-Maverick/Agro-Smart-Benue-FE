@@ -14,6 +14,7 @@ import { Loader2, ShoppingBag, TrendingUp, Plus } from "lucide-react"
 import { useAuth } from "@/app/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 import ProductTable from "@/components/ProductTable"
+import axios from "axios"
 
 interface Product {
   id: number
@@ -86,15 +87,15 @@ export default function UserProductManager() {
 
   const fetchUserProducts = async () => {
     try {
-      const response = await fetch(
+      setLoading(true)
+      const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/by-user?email=${user?.email}`
       )
-      if (response.ok) {
-        const data = await response.json()
-        setProducts(data.data || [])
-      }
+      console.log("Products: ", response.data)
+      setProducts(response.data.data || [])
     } catch (error) {
       console.error("Failed to fetch products:", error)
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -102,15 +103,13 @@ export default function UserProductManager() {
 
   const fetchUserDemands = async () => {
     try {
-      const response = await fetch(
+      const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demands/by-user?email=${user?.email}`
       )
-      if (response.ok) {
-        const data = await response.json()
-        setDemands(data.data || [])
-      }
+      setDemands(response.data.data || [])
     } catch (error) {
       console.error("Failed to fetch demands:", error)
+      setDemands([])
     }
   }
 
@@ -155,22 +154,23 @@ export default function UserProductManager() {
         quantityCategory: productForm.quantityCategory,
       })
 
-      const response = await fetch(
+      const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/add?email=${user.email}`,
+        formData,
         {
-          method: 'POST',
-          body: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         }
       )
 
-      if (response.ok) {
+      if (response.status === 200 || response.status === 201) {
         showToast('success', 'Product Added!', 'Your product has been added to the marketplace.')
         setIsAddProductOpen(false)
         resetProductForm()
         fetchUserProducts()
       } else {
-        const errorText = await response.text()
-        throw new Error(errorText || 'Failed to add product')
+        throw new Error(response.data?.message || 'Failed to add product')
       }
     } catch (error: any) {
       showToast('error', 'Error', error.message || 'Failed to add product. Please try again.')
@@ -204,25 +204,23 @@ export default function UserProductManager() {
 
       console.log('Sending demand data:', payload)
 
-      const response = await fetch(
+      const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demand?buyerEmail=${user.email}`,
+        payload,
         {
-          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(payload),
         }
       )
 
-      if (response.ok) {
+      if (response.status === 200 || response.status === 201) {
         showToast('success', 'Demand Added!', 'Your demand request has been submitted.')
         setIsAddDemandOpen(false)
         resetDemandForm()
         fetchUserDemands()
       } else {
-        const errorText = await response.text()
-        throw new Error(errorText || 'Failed to add demand')
+        throw new Error(response.data?.message || 'Failed to add demand')
       }
     } catch (error: any) {
       showToast('error', 'Error', error.message || 'Failed to add demand. Please try again.')

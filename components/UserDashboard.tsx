@@ -25,9 +25,7 @@ import {
     Settings,
     LogOut,
     MapPin,
-    DollarSign,
     BarChart3,
-    Users,
     ShoppingBag,
     Loader2,
     User as UserIcon,
@@ -38,23 +36,22 @@ import CollapsibleSidebar from "@/components/CollapsibleSidebar"
 import UserProductManager from "@/components/UserProductManager"
 import UserProfile from "@/components/UserProfile"
 import Link from "next/link"
-import Image from "next/image"
 import axios from "axios"
 
 const sidebarItems = [
-  { id: "overview", label: "Overview", icon: <BarChart3 className="h-5 w-5" /> },
-  { id: "profile", label: "Profile", icon: <UserIcon className="h-5 w-5" /> },
-  { id: "crops", label: "My Crops", icon: <Leaf className="h-5 w-5" /> },
-  { id: "products", label: "My Products", icon: <ShoppingBag className="h-5 w-5" /> },
-  { id: "weather", label: "Weather", icon: <CloudRain className="h-5 w-5" /> },
-  { id: "market", label: "Market", icon: <span className="text-lg font-bold">₦</span> },
+  { id: "overview", label: "Overview", icon: <BarChart3 className="h-5 w-5" />, href: "/dashboard/overview" },
+  { id: "profile", label: "Profile", icon: <UserIcon className="h-5 w-5" />, href: "/dashboard/profile" },
+  { id: "crops", label: "My Crops", icon: <Leaf className="h-5 w-5" />, href: "/dashboard/crops" },
+  { id: "products", label: "My Products", icon: <ShoppingBag className="h-5 w-5" />, href: "/dashboard/products" },
+  { id: "weather", label: "Weather", icon: <CloudRain className="h-5 w-5" />, href: "/dashboard/weather" },
+  { id: "market", label: "Market", icon: <span className="text-lg font-bold">₦</span>, href: "/dashboard/market" },
 ]
 
 export default function UserDashboard() {
     const { data: session } = useSession()
     const router = useRouter()
     const [activeTab, setActiveTab] = useState("overview")
-    const [notifications, setNotifications] = useState(3)
+    const [notifications] = useState(3)
     const [weatherData, setWeatherData] = useState<any>(null)
     const [weatherLoading, setWeatherLoading] = useState(true)
 
@@ -65,19 +62,16 @@ export default function UserDashboard() {
     const fetchWeather = async () => {
         try {
             const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY
-            const response = await fetch(
+            const response = await axios.get(
                 `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=Makurdi&aqi=no`
             )
-            if (response.ok) {
-                const data = await response.json()
-                setWeatherData({
-                    temperature: Math.round(data.current.temp_c),
-                    humidity: data.current.humidity,
-                    rainfall: data.current.precip_mm,
-                    forecast: data.current.condition.text,
-                    location: `${data.location.name}, ${data.location.region}`,
-                })
-            }
+            setWeatherData({
+                temperature: Math.round(response.data.current.temp_c),
+                humidity: response.data.current.humidity,
+                rainfall: response.data.current.precip_mm,
+                forecast: response.data.current.condition.text,
+                location: `${response.data.location.name}, ${response.data.location.region}`,
+            })
         } catch (error) {
             console.error("Failed to fetch weather:", error)
         } finally {
@@ -143,7 +137,12 @@ export default function UserDashboard() {
             <CollapsibleSidebar
                 items={sidebarItems}
                 activeTab={activeTab}
-                onTabChange={setActiveTab}
+                onTabChange={(tabId) => {
+                    const item = sidebarItems.find(i => i.id === tabId)
+                    if (item?.href) {
+                        router.push(item.href)
+                    }
+                }}
                 title="Dashboard"
             />
 

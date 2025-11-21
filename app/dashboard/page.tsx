@@ -3,14 +3,18 @@
 import { useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import UserDashboard from "@/components/UserDashboard"
 import Loading from "@/components/Loading"
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
+  const router = useRouter()
 
-  // Let middleware handle auth redirect - don't redirect here
-  // This prevents race conditions in production
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard/overview")
+    }
+  }, [status, router])
+
   if (status === "loading") {
     return <Loading />
   }
@@ -19,5 +23,5 @@ export default function DashboardPage() {
     return <Loading />
   }
 
-  return <UserDashboard />
+  return <Loading />
 }
