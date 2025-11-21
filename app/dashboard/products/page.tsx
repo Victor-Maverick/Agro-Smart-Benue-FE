@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import CollapsibleSidebar from "@/components/CollapsibleSidebar"
 import UserProductManager from "@/components/UserProductManager"
-import { BarChart3, Leaf, ShoppingBag, CloudRain, User as UserIcon } from "lucide-react"
+import { BarChart3, Leaf, ShoppingBag, User as UserIcon } from "lucide-react"
 import Loading from "@/components/Loading"
 
 const sidebarItems = [
@@ -12,7 +12,6 @@ const sidebarItems = [
   { id: "profile", label: "Profile", icon: <UserIcon className="h-5 w-5" />, href: "/dashboard/profile" },
   { id: "crops", label: "My Crops", icon: <Leaf className="h-5 w-5" />, href: "/dashboard/crops" },
   { id: "products", label: "My Products", icon: <ShoppingBag className="h-5 w-5" />, href: "/dashboard/products" },
-  { id: "weather", label: "Weather", icon: <CloudRain className="h-5 w-5" />, href: "/dashboard/weather" },
   { id: "market", label: "Market", icon: <span className="text-lg font-bold">₦</span>, href: "/dashboard/market" },
 ]
 

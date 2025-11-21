@@ -11,8 +11,8 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2, ShoppingBag, TrendingUp, Plus } from "lucide-react"
-import { useAuth } from "@/app/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
+import { useSession } from "next-auth/react"
 import ProductTable from "@/components/ProductTable"
 import axios from "axios"
 
@@ -47,8 +47,8 @@ interface Demand {
 }
 
 export default function UserProductManager() {
-  const { user } = useAuth()
   const { showToast } = useToast()
+  const { data: session } = useSession()
   const [products, setProducts] = useState<Product[]>([])
   const [demands, setDemands] = useState<Demand[]>([])
   const [loading, setLoading] = useState(true)
@@ -79,17 +79,24 @@ export default function UserProductManager() {
   })
 
   useEffect(() => {
-    if (user?.email) {
+    if (session?.user?.email) {
       fetchUserProducts()
       fetchUserDemands()
+    } else {
+      setLoading(false)
     }
-  }, [user])
+  }, [session])
 
   const fetchUserProducts = async () => {
+    if (!session?.user?.email) {
+      setLoading(false)
+      return
+    }
+    
     try {
       setLoading(true)
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/by-user?email=${user?.email}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/by-user?email=${session.user.email}`
       )
       console.log("Products: ", response.data)
       setProducts(response.data.data || [])
@@ -102,9 +109,11 @@ export default function UserProductManager() {
   }
 
   const fetchUserDemands = async () => {
+    if (!session?.user?.email) return
+    
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demands/by-user?email=${user?.email}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demands/by-user?email=${session.user.email}`
       )
       setDemands(response.data.data || [])
     } catch (error) {
@@ -131,7 +140,7 @@ export default function UserProductManager() {
       return
     }
 
-    if (!user?.email) {
+    if (!session?.user?.email) {
       showToast('error', 'Authentication Error', 'User email not found. Please log in again.')
       return
     }
@@ -155,7 +164,7 @@ export default function UserProductManager() {
       })
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/add?email=${user.email}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/add?email=${session.user.email}`,
         formData,
         {
           headers: {
@@ -185,7 +194,7 @@ export default function UserProductManager() {
       return
     }
 
-    if (!user?.email) {
+    if (!session?.user?.email) {
       showToast('error', 'Authentication Error', 'User email not found. Please log in again.')
       return
     }
@@ -205,7 +214,7 @@ export default function UserProductManager() {
       console.log('Sending demand data:', payload)
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demand?buyerEmail=${user.email}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demand?buyerEmail=${session.user.email}`,
         payload,
         {
           headers: {

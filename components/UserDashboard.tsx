@@ -43,7 +43,6 @@ const sidebarItems = [
   { id: "profile", label: "Profile", icon: <UserIcon className="h-5 w-5" />, href: "/dashboard/profile" },
   { id: "crops", label: "My Crops", icon: <Leaf className="h-5 w-5" />, href: "/dashboard/crops" },
   { id: "products", label: "My Products", icon: <ShoppingBag className="h-5 w-5" />, href: "/dashboard/products" },
-  { id: "weather", label: "Weather", icon: <CloudRain className="h-5 w-5" />, href: "/dashboard/weather" },
   { id: "market", label: "Market", icon: <span className="text-lg font-bold">₦</span>, href: "/dashboard/market" },
 ]
 
@@ -353,37 +352,6 @@ export default function UserDashboard() {
 
                         {/* Products Tab */}
                         {activeTab === "products" && <UserProductManager />}
-
-                        {/* Weather Tab */}
-                        {activeTab === "weather" && (
-                            <div className="space-y-6">
-                                <div>
-                                    <h2 className="text-2xl font-bold text-gray-900">Weather Forecast</h2>
-                                    <p className="text-gray-600">7-day weather outlook for your area</p>
-                                </div>
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>7-Day Forecast</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                                            {[...Array(7)].map((_, index) => (
-                                                <div key={index} className="text-center p-4 border rounded-lg">
-                                                    <p className="text-sm font-medium">
-                                                        {new Date(Date.now() + index * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
-                                                            weekday: "short",
-                                                        })}
-                                                    </p>
-                                                    <Sun className="h-8 w-8 text-yellow-500 mx-auto my-2" />
-                                                    <p className="text-lg font-bold">{28 + Math.floor(Math.random() * 6)}°C</p>
-                                                    <p className="text-xs text-gray-500">{Math.floor(Math.random() * 30)}% rain</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        )}
 
                         {/* Market Tab */}
                         {activeTab === "market" && (

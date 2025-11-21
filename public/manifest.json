@@ -1,31 +1,31 @@
 {
-    "name": "BFPC - Benue Farmers Peace Corps",
-    "short_name": "BFPC",
-    "description": "Empowering farmers across Benue State with digital agricultural solutions",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#16a34a",
-    "orientation": "portrait-primary",
-    "icons": [
-        {
-            "src": "/placeholder-logo.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable any"
-        },
-        {
-            "src": "/placeholder-logo.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable any"
-        }
-    ],
-    "categories": [
-        "agriculture",
-        "farming",
-        "productivity"
-    ],
-    "lang": "en",
-    "dir": "ltr"
+  "name": "BFPC - Benue Farmers Peace Corps",
+  "short_name": "BFPC",
+  "description": "Empowering farmers across Benue State with digital agricultural solutions",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/header image.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/header image.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": [
+    "agriculture",
+    "farming",
+    "productivity"
+  ],
+  "lang": "en",
+  "dir": "ltr"
 }
