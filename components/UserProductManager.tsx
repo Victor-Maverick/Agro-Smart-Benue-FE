@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, ShoppingBag, TrendingUp, Plus } from "lucide-react"
+import { Loader2, ShoppingBag, TrendingUp, Plus, Trash2 } from "lucide-react"
 import { useToast } from "@/contexts/ToastContext"
 import { useSession } from "next-auth/react"
 import ProductTable from "@/components/ProductTable"
@@ -55,6 +55,8 @@ export default function UserProductManager() {
   const [submitting, setSubmitting] = useState(false)
   const [isAddProductOpen, setIsAddProductOpen] = useState(false)
   const [isAddDemandOpen, setIsAddDemandOpen] = useState(false)
+  const [isEditProductOpen, setIsEditProductOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>("")
   const [activeTab, setActiveTab] = useState("products")
@@ -261,6 +263,110 @@ export default function UserProductManager() {
       phoneContact: "",
       description: "",
     })
+  }
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product)
+    setProductForm({
+      name: product.name,
+      description: product.description,
+      quantity: product.quantity.toString(),
+      quantityCategory: product.quantityCategory,
+      unitPrice: product.unitPrice.toString(),
+      location: product.location || "",
+    })
+    setImagePreview(product.imageUrl || "")
+    setIsEditProductOpen(true)
+  }
+
+  const handleUpdateProduct = async () => {
+    if (!editingProduct) return
+    
+    if (!productForm.name || !productForm.quantity || !productForm.unitPrice || !productForm.quantityCategory) {
+      showToast('error', 'Missing Information', 'Please fill in all required fields.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const formData = new FormData()
+      formData.append('name', productForm.name)
+      formData.append('description', productForm.description || '')
+      formData.append('quantity', productForm.quantity.toString())
+      formData.append('quantityCategory', productForm.quantityCategory)
+      formData.append('unitPrice', productForm.unitPrice.toString())
+      formData.append('location', productForm.location || '')
+      
+      if (selectedImage) {
+        formData.append('image', selectedImage)
+      }
+
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/update/${editingProduct.id}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      )
+
+      if (response.status === 200 || response.status === 201) {
+        showToast('success', 'Product Updated!', 'Your product has been updated successfully.')
+        setIsEditProductOpen(false)
+        setEditingProduct(null)
+        resetProductForm()
+        fetchUserProducts()
+      } else {
+        throw new Error(response.data?.message || 'Failed to update product')
+      }
+    } catch (error: any) {
+      showToast('error', 'Error', error.message || 'Failed to update product. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDeleteProduct = async (productId: number) => {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/delete/${productId}`
+      )
+
+      if (response.status === 200) {
+        showToast('success', 'Product Deleted', 'Your product has been removed from the marketplace.')
+        fetchUserProducts()
+      } else {
+        throw new Error('Failed to delete product')
+      }
+    } catch (error: any) {
+      showToast('error', 'Error', error.message || 'Failed to delete product. Please try again.')
+    }
+  }
+
+  const handleDeleteDemand = async (demandId: number) => {
+    if (!confirm('Are you sure you want to delete this demand request?')) {
+      return
+    }
+
+    try {
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demand/delete/${demandId}`
+      )
+
+      if (response.status === 200) {
+        showToast('success', 'Demand Deleted', 'Your demand request has been removed.')
+        fetchUserDemands()
+      } else {
+        throw new Error('Failed to delete demand')
+      }
+    } catch (error: any) {
+      showToast('error', 'Error', error.message || 'Failed to delete demand. Please try again.')
+    }
   }
 
   const formatPrice = (price: number) => {
@@ -528,6 +634,122 @@ export default function UserProductManager() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Product Dialog */}
+          <Dialog open={isEditProductOpen} onOpenChange={setIsEditProductOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Product</DialogTitle>
+                <DialogDescription>Update your product information</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Product Name *</Label>
+                  <Input
+                    id="edit-name"
+                    value={productForm.name}
+                    onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                    placeholder="e.g., Premium Rice"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    value={productForm.description}
+                    onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                    placeholder="Describe your product"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-quantity">Quantity *</Label>
+                    <Input
+                      id="edit-quantity"
+                      type="number"
+                      value={productForm.quantity}
+                      onChange={(e) => setProductForm({ ...productForm, quantity: e.target.value })}
+                      placeholder="100"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-quantityCategory">Unit *</Label>
+                    <Select value={productForm.quantityCategory} onValueChange={(value) => setProductForm({ ...productForm, quantityCategory: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                        <SelectItem value="bags">Bags</SelectItem>
+                        <SelectItem value="tubers">Tubers</SelectItem>
+                        <SelectItem value="pieces">Pieces</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-unitPrice">Price per Unit *</Label>
+                    <Input
+                      id="edit-unitPrice"
+                      type="number"
+                      value={productForm.unitPrice}
+                      onChange={(e) => setProductForm({ ...productForm, unitPrice: e.target.value })}
+                      placeholder="5000"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-location">Location</Label>
+                  <Input
+                    id="edit-location"
+                    value={productForm.location}
+                    onChange={(e) => setProductForm({ ...productForm, location: e.target.value })}
+                    placeholder="e.g., Makurdi"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-image">Product Image (Optional - leave empty to keep current)</Label>
+                  <Input
+                    id="edit-image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="cursor-pointer"
+                  />
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img
+                        src={imagePreview}
+                        alt="Product preview"
+                        className="w-full h-32 object-cover rounded-md border"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={() => {
+                    setIsEditProductOpen(false)
+                    setEditingProduct(null)
+                    resetProductForm()
+                  }}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleUpdateProduct} 
+                    disabled={submitting}
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    Update Product
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -548,14 +770,8 @@ export default function UserProductManager() {
           {products.length > 0 ? (
             <ProductTable 
               products={products} 
-              onEdit={(product) => {
-                // TODO: Implement edit functionality
-                console.log('Edit product:', product)
-              }}
-              onDelete={(productId) => {
-                // TODO: Implement delete functionality
-                console.log('Delete product:', productId)
-              }}
+              onEdit={handleEditProduct}
+              onDelete={handleDeleteProduct}
               itemsPerPage={10}
             />
           ) : (
@@ -593,6 +809,14 @@ export default function UserProductManager() {
                           <CardDescription>{demand.description}</CardDescription>
                         )}
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteDemand(demand.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent>

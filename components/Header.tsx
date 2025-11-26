@@ -5,14 +5,17 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, User, LogOut, BarChart3, ChevronDown } from 'lucide-react'
+import { useLogout } from '@/contexts/LogoutContext'
 import axios from 'axios'
 
 export default function Header() {
   const { data: session } = useSession()
+  const { isLoggingOut, setIsLoggingOut } = useLogout()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
 
   const handleSignOut = async () => {
+    setIsLoggingOut(true)
     try {
       // Call backend logout endpoint if we have a token
       if (session?.accessToken) {

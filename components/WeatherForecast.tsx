@@ -270,33 +270,6 @@ export default function WeatherForecast() {
           })}
         </div>
 
-        {/* Farming Tips Based on Weather */}
-        <Card className="mt-8 border-green-200 bg-green-50">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <div className="h-12 w-12 rounded-full bg-green-600 flex items-center justify-center">
-                  <Sun className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Farming Tip for Today
-                </h3>
-                <p className="text-gray-700">
-                  {weather.current.temp_c > 30
-                    ? "High temperatures expected. Ensure adequate irrigation for your crops and provide shade for livestock."
-                    : weather.forecast.forecastday[0].day.totalprecip_mm > 5
-                    ? "Rain expected today. Good time for planting but avoid harvesting. Ensure proper drainage in your fields."
-                    : weather.current.wind_kph > 20
-                    ? "Strong winds expected. Secure loose items and check crop support structures."
-                    : "Good weather conditions for farming activities. Perfect time for planting, weeding, or harvesting."}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <div className="text-center mt-6">
           <p className="text-sm text-gray-500">
             Weather data provided by{" "}

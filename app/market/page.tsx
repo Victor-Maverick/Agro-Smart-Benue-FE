@@ -57,7 +57,7 @@ export default function MarketPage() {
   const fetchMarketData = async () => {
     try {
       setLoading(true)
-      const productsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/all`)
+      const productsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/all-available`)
       console.log("Products", productsRes.data)
       if (productsRes.data.status === true) {
         const fetchedProducts = productsRes.data.data || []

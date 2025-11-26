@@ -99,11 +99,11 @@ export default function Login() {
           // Small delay to ensure toast is visible
           await new Promise(resolve => setTimeout(resolve, 500))
           
-          // Redirect based on role
+          // Redirect based on role using window.location for hard navigation
           if (isAdmin) {
-            router.push('/admin')
+            window.location.href = '/admin'
           } else {
-            router.push('/dashboard')
+            window.location.href = '/dashboard'
           }
         } else {
           console.error('[Login] No user data in session')
@@ -177,7 +177,7 @@ export default function Login() {
 
             {/* reCAPTCHA */}
             {process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY && (
-              <div className="flex justify-center">
+              <div className="flex justify-start">
                 <ReCAPTCHA
                   sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
                   onChange={handleCaptchaChange}

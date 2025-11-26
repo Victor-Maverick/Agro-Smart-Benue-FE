@@ -82,17 +82,13 @@ export default function AdminProductsDemandsManager() {
       setLoading(true)
       // Fetch all products from API
       const productsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/all`)
-      console.log("Products:", productsResponse.data)
-      
+            
       // Fetch all demands from API
       const demandsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demands`)
+      setProducts(productsResponse.data || [])
+      setDemands(demandsResponse.data.data || [])
+
       
-      if (productsResponse.data.status === true) {
-        setProducts(productsResponse.data.data || [])
-      }
-      if (demandsResponse.data.status === true) {
-        setDemands(demandsResponse.data.data || [])
-      }
     } catch (error) {
       console.error("Failed to fetch data:", error)
       setProducts([])
@@ -157,8 +153,15 @@ export default function AdminProductsDemandsManager() {
   }
 
   const handleAddDemand = async () => {
-    if (!demandForm.productName || !demandForm.quantity || !demandForm.quantityCategory || !demandForm.phoneContact || !demandForm.buyerEmail) {
-      showToast('error', 'Missing Information', 'Please fill in all required fields including buyer email.')
+    const buyerEmail = session?.user?.email || demandForm.buyerEmail
+    
+    if (!demandForm.productName || !demandForm.quantity || !demandForm.quantityCategory || !demandForm.phoneContact) {
+      showToast('error', 'Missing Information', 'Please fill in all required fields.')
+      return
+    }
+
+    if (!buyerEmail) {
+      showToast('error', 'Missing Email', 'Buyer email is required.')
       return
     }
 
@@ -175,7 +178,7 @@ export default function AdminProductsDemandsManager() {
       }
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demand?buyerEmail=${demandForm.buyerEmail}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demands?buyerEmail=${buyerEmail}`,
         payload,
         {
           headers: {
@@ -200,7 +203,7 @@ export default function AdminProductsDemandsManager() {
   }
 
   const handleDeleteProduct = async (productId: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
       return
     }
 
@@ -217,6 +220,27 @@ export default function AdminProductsDemandsManager() {
       }
     } catch (error: any) {
       showToast('error', 'Error', error.message || 'Failed to delete product. Please try again.')
+    }
+  }
+
+  const handleDeleteDemand = async (demandId: number) => {
+    if (!confirm('Are you sure you want to delete this demand request?')) {
+      return
+    }
+
+    try {
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demand/delete/${demandId}`
+      )
+
+      if (response.status === 200) {
+        showToast('success', 'Demand Deleted', 'Demand request has been removed.')
+        fetchData()
+      } else {
+        throw new Error('Failed to delete demand')
+      }
+    } catch (error: any) {
+      showToast('error', 'Error', error.message || 'Failed to delete demand. Please try again.')
     }
   }
 
@@ -422,17 +446,6 @@ export default function AdminProductsDemandsManager() {
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="buyerEmail">Buyer Email *</Label>
-                  <Input
-                    id="buyerEmail"
-                    type="email"
-                    value={demandForm.buyerEmail}
-                    onChange={(e) => setDemandForm({ ...demandForm, buyerEmail: e.target.value })}
-                    placeholder="buyer@example.com"
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="productName">Product Name *</Label>
                   <Input
                     id="productName"
@@ -562,43 +575,63 @@ export default function AdminProductsDemandsManager() {
         </TabsContent>
 
         <TabsContent value="demands" className="space-y-4">
-          <div className="grid gap-4">
-            {demands.map((demand) => (
-              <Card key={demand.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {demand.productName}
-                        <Badge 
-                          variant={demand.status === "FULFILLED" ? "default" : "secondary"}
-                        >
-                          {demand.status}
-                        </Badge>
-                      </CardTitle>
-                      <CardDescription>Requested on {formatDate(demand.createdAt)}</CardDescription>
+          {demands.length > 0 ? (
+            <div className="grid gap-4">
+              {demands.map((demand) => (
+                <Card key={demand.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          {demand.productName}
+                          {demand.status && (
+                            <Badge 
+                              variant={demand.status === "FULFILLED" ? "default" : "secondary"}
+                            >
+                              {demand.status}
+                            </Badge>
+                          )}
+                        </CardTitle>
+                        <CardDescription>Requested on {formatDate(demand.createdAt)}</CardDescription>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteDemand(demand.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="font-medium text-gray-700">Quantity</p>
-                      <p className="text-gray-600">{demand.quantity} {demand.unit}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="font-medium text-gray-700">Quantity</p>
+                        <p className="text-gray-600">{demand.quantity} {demand.unit}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-700">Location</p>
+                        <p className="text-gray-600">{demand.location}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-700">Status</p>
+                        <p className="text-gray-600 capitalize">{demand.status?.toLowerCase() || 'Pending'}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-700">Location</p>
-                      <p className="text-gray-600">{demand.location}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-700">Status</p>
-                      {/* <p className="text-gray-600 capitalize">{demand.status.toLowerCase()}</p> */}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Demands Found</h3>
+                <p className="text-gray-600">No demand requests have been submitted yet.</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

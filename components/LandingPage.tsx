@@ -392,7 +392,7 @@ export default function BFPCLanding() {
                   <button
                     key={index}
                     onClick={() => setCurrentTestimonialIndex(index)}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentTestimonialIndex
+                    className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${index === currentTestimonialIndex
                       ? "bg-green-600 scale-110"
                       : "bg-gray-300 hover:bg-gray-400"
                       }`}

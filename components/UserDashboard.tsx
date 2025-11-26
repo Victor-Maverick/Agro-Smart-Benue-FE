@@ -32,6 +32,7 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
+import { useLogout } from "@/contexts/LogoutContext"
 import CollapsibleSidebar from "@/components/CollapsibleSidebar"
 import UserProductManager from "@/components/UserProductManager"
 import UserProfile from "@/components/UserProfile"
@@ -48,6 +49,7 @@ const sidebarItems = [
 
 export default function UserDashboard() {
     const { data: session } = useSession()
+    const { isLoggingOut, setIsLoggingOut } = useLogout()
     const router = useRouter()
     const [activeTab, setActiveTab] = useState("overview")
     const [notifications] = useState(3)
@@ -79,6 +81,7 @@ export default function UserDashboard() {
     }
 
     const handleLogout = async () => {
+        setIsLoggingOut(true)
         try {
             // Call backend logout endpoint if we have a token
             if (session?.accessToken) {

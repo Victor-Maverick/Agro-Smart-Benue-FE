@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils"
 import Image from "next/image"
 import Link from "next/link"
 import { signOut, useSession } from "next-auth/react"
+import { useLogout } from "@/contexts/LogoutContext"
 import axios from "axios"
 
 interface SidebarItem {
@@ -42,6 +43,7 @@ export default function CollapsibleSidebar({
   title 
 }: CollapsibleSidebarProps) {
   const { data: session } = useSession()
+  const { isLoggingOut, setIsLoggingOut } = useLogout()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
@@ -51,6 +53,7 @@ export default function CollapsibleSidebar({
   }
 
   const handleLogout = async () => {
+    setIsLoggingOut(true)
     try {
       // Call backend logout endpoint if we have a token
       if (session?.accessToken) {

@@ -20,7 +20,7 @@ export default function Footer() {
           </div>
 
           {/* Group the three columns closer together on the right side */}
-          <div className="md:col-span-7 md:ml-8 grid md:grid-cols-3 gap-6">
+          <div className="md:col-span-7 md:ml-8 grid grid-cols-2 md:grid-cols-3 gap-6">
             <div>
               <h3 className="font-semibold mb-4 text-[#c6eb5f]">Platform</h3>
               <ul className="space-y-2 text-green-200">
@@ -66,7 +66,7 @@ export default function Footer() {
                 </li>
               </ul>
             </div>
-            <div>
+            <div className="col-span-2 md:col-span-1">
               <h3 className="font-semibold text-[#c6eb5f] mb-4">Company</h3>
               <ul className="space-y-2 text-green-200">
                 <li>
