@@ -216,7 +216,7 @@ export default function UserProductManager() {
       console.log('Sending demand data:', payload)
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demand?buyerEmail=${session.user.email}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/demands?buyerEmail=${session.user.email}`,
         payload,
         {
           headers: {
