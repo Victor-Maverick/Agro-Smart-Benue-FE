@@ -66,7 +66,31 @@ const authOptions: NextAuthOptions = {
             },
         }),
     ],
+
+    events: {
+        async signOut({ token }) {
+            // Call logout API when user signs out
+            try {
+                const logoutUrl = getApiUrl('/api/auth/logout');
+                await axios.post(logoutUrl, {}, {
+                    headers: {
+                        Authorization: `Bearer ${token.accessToken}`
+                    }
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        },
+    },
+    pages: {
+        signIn: '/login',
+        error: '/login',
+    },
     callbacks: {
+        async redirect({ url, baseUrl }) {
+            // Always redirect to base URL to avoid callback URLs
+            return baseUrl
+        },
         async jwt({ token, user }) {
             if (user) {
                 console.log('[NextAuth] JWT callback - user data:', JSON.stringify(user));
@@ -95,25 +119,6 @@ const authOptions: NextAuthOptions = {
             }
             return session;
         },
-    },
-    events: {
-        async signOut({ token }) {
-            // Call logout API when user signs out
-            try {
-                const logoutUrl = getApiUrl('/api/auth/logout');
-                await axios.post(logoutUrl, {}, {
-                    headers: {
-                        Authorization: `Bearer ${token.accessToken}`
-                    }
-                });
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
-        },
-    },
-    pages: {
-        signIn: '/login',
-        error: '/login',
     },
     useSecureCookies: process.env.NODE_ENV === 'production',
     cookies: {

@@ -43,9 +43,11 @@ export default function Header() {
     localStorage.clear()
     sessionStorage.clear()
     
-    // Sign out from NextAuth and force reload
+    // Sign out from NextAuth
     await signOut({ redirect: false })
-    window.location.href = "/"
+    
+    // Force full page reload to home page
+    window.location.replace("/")
   }
 
   return (

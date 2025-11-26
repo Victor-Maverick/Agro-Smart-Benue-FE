@@ -68,10 +68,16 @@ export default function Login() {
     try {
       console.log('[Login] Starting login process...')
       
+      // Clear any existing callback URLs from the URL
+      if (window.location.search.includes('callbackUrl')) {
+        window.history.replaceState({}, '', '/login')
+      }
+      
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
         redirect: false,
+        callbackUrl: '/', // Set to home to prevent NextAuth from using current URL
       })
 
       console.log('[Login] NextAuth result:', result)
