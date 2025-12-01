@@ -88,7 +88,15 @@ const authOptions: NextAuthOptions = {
     },
     callbacks: {
         async redirect({ url, baseUrl }) {
-            // Always redirect to base URL to avoid callback URLs
+            // If url is relative, prepend baseUrl
+            if (url.startsWith('/')) {
+                return `${baseUrl}${url}`
+            }
+            // If url is on the same origin, allow it
+            if (new URL(url).origin === baseUrl) {
+                return url
+            }
+            // Otherwise, redirect to baseUrl
             return baseUrl
         },
         async jwt({ token, user }) {
@@ -120,7 +128,6 @@ const authOptions: NextAuthOptions = {
             return session;
         },
     },
-    useSecureCookies: process.env.NODE_ENV === 'production',
     cookies: {
         sessionToken: {
             name: process.env.NODE_ENV === 'production' 
@@ -131,6 +138,7 @@ const authOptions: NextAuthOptions = {
                 sameSite: 'lax',
                 path: '/',
                 secure: process.env.NODE_ENV === 'production',
+                domain: process.env.NODE_ENV === 'production' ? '.agrosmartbenue.com' : undefined,
             },
         },
     },

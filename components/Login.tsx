@@ -68,16 +68,10 @@ export default function Login() {
     try {
       console.log('[Login] Starting login process...')
       
-      // Clear any existing callback URLs from the URL
-      if (window.location.search.includes('callbackUrl')) {
-        window.history.replaceState({}, '', '/login')
-      }
-      
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
         redirect: false,
-        callbackUrl: '/', // Set to home to prevent NextAuth from using current URL
       })
 
       console.log('[Login] NextAuth result:', result)
@@ -85,10 +79,14 @@ export default function Login() {
       if (result?.error) {
         console.error('[Login] Login error:', result.error)
         showToast('error', 'Login Failed', result.error)
-      } else if (result?.ok) {
+        setLoading(false)
+        return
+      }
+      
+      if (result?.ok) {
         console.log('[Login] Sign in successful, fetching session...')
         
-        // Fetch session via API endpoint (more reliable than getSession)
+        // Fetch session to get user roles
         const response = await fetch('/api/auth/session')
         const session = await response.json()
         
@@ -102,25 +100,23 @@ export default function Login() {
           
           console.log('[Login] User roles:', roles, 'isAdmin:', isAdmin)
           
-          // Small delay to ensure toast is visible
-          await new Promise(resolve => setTimeout(resolve, 500))
+          // Redirect based on role
+          const redirectUrl = isAdmin ? '/admin' : '/dashboard'
+          console.log('[Login] Redirecting to:', redirectUrl)
           
-          // Redirect based on role using window.location for hard navigation
-          if (isAdmin) {
-            window.location.href = '/admin'
-          } else {
-            window.location.href = '/dashboard'
-          }
+          // Use router.push for client-side navigation
+          router.push(redirectUrl)
+          router.refresh() // Force refresh to update middleware
         } else {
           console.error('[Login] No user data in session')
           showToast('error', 'Login Failed', 'Failed to establish session. Please try again.')
+          setLoading(false)
         }
       }
     } catch (error: any) {
       console.error('[Login] Login error:', error)
       const errorMessage = error.message || 'An error occurred during login'
       showToast('error', 'Login Failed', errorMessage)
-    } finally {
       setLoading(false)
     }
   }
