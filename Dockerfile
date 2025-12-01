@@ -1,13 +1,12 @@
 # ----------- BUILD STAGE -----------
 FROM node:18-alpine AS builder
-
 WORKDIR /app
 
-# Install dependencies
+# Copy package files
 COPY package*.json ./
-RUN npm ci
+RUN npm ci && npm cache clean --force
 
-# Copy source code
+# Copy source
 COPY . .
 
 # Build-time environment variables
@@ -24,30 +23,27 @@ ENV NEXTAUTH_URL=$NEXTAUTH_URL
 ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
 ENV NODE_ENV=production
 
-# Build Next.js
 RUN npm run build
-
 
 # ----------- RUN STAGE -----------
 FROM node:18-alpine AS runner
-
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Add a non-root user for security
-RUN addgroup --system app && adduser --system -G app app
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# Copy built files ONLY
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package*.json ./
+# Copy only standalone output (minimal Next.js server)
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Install ONLY prod dependencies
-RUN npm ci --omit=dev
-
-USER app
+USER nextjs
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["node", "server.js"]
